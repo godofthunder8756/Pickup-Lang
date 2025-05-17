@@ -1,14 +1,41 @@
-// Whitespace and comments
+// Basic tokens
 WHITESPACE = _{ " " | "\t" | NEWLINE }
 NEWLINE    = _{ "\r\n" | "\n" }
 COMMENT    = _{ "--" ~ (!NEWLINE ~ ANY)* }
 
-// Tokens
-identifier = @{ (ASCII_ALPHANUMERIC | "_")+ }
-number     = @{ ASCII_DIGIT+ }
+// Literals
+identifier = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+number     = @{ "-"? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
 string     = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+boolean    = @{ "true" | "false" }
+
+// Operators
+op_add   = { "+" }
+op_sub   = { "-" }
+op_mul   = { "*" }
+op_div   = { "/" }
+op_eq    = { "==" }
+op_neq   = { "~=" }
+op_lt    = { "<" }
+op_gt    = { ">" }
+op_le    = { "<=" }
+op_ge    = { ">=" }
+op_and   = { "and" }
+op_or    = { "or" }
+op_concat = { ".." }
+
+operator = _{ op_add | op_sub | op_mul | op_div | op_eq | op_neq | op_lt | op_gt | op_le | op_ge | op_and | op_or | op_concat }
+
+// Keywords
+keyword = _{ "if" | "then" | "else" | "end" | "function" | "return" | "for" | "do" | "while" | "break" | "true" | "false" | "nil" }
 
 // Grammar
 program     = { SOI ~ statement* ~ EOI }
-statement   = _{ expression ~ NEWLINE* }
-expression  = _{ number | string | identifier }
+statement   = _{ (assignment | function_call | print_stmt) ~ NEWLINE* }
+expression  = _{ term ~ (operator ~ term)* }
+term        = _{ number | string | boolean | function_call | identifier | "(" ~ expression ~ ")" }
+
+// Statements
+assignment  = { identifier ~ "=" ~ expression }
+function_call = { identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
+print_stmt  = { "print" ~ "(" ~ expression ~ ")" }

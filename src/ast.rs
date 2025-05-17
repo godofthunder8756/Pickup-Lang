@@ -9,4 +9,14 @@ pub enum AstNode {
     String(String),
     /// Identifier token.
     Identifier(String),
+    /// Boolean literal
+    Boolean(bool),
+    /// Assignment operation (identifier, value)
+    Assignment(Box<AstNode>, Box<AstNode>),
+    /// Binary operations (left, operator, right)
+    BinaryOp(Box<AstNode>, String, Box<AstNode>),
+    /// Function call (function name, arguments)
+    FunctionCall(String, Vec<AstNode>),
+    /// Print statement
+    Print(Box<AstNode>),
 }
