@@ -52,6 +52,15 @@ fn parse_statement(pair: Pair<Rule>) -> Result<Option<AstNode>, ParseError> {
             // First element is always the identifier
             let id_node = AstNode::Identifier(inner[0].as_str().to_string());
             
+            // Check if this is a binary operation with string concatenation (greeting = "Hello, " .. name)
+            if inner.len() >= 4 && inner[2].as_rule() == Rule::op_concat {
+                let left = parse_term(inner[1].clone())?;
+                let right = parse_term(inner[3].clone())?;
+                
+                let binary_op = AstNode::BinaryOp(Box::new(left), "..".to_string(), Box::new(right));
+                return Ok(Some(AstNode::Assignment(Box::new(id_node), Box::new(binary_op))));
+            }
+            
             // Check if this is a binary operation (x = a + b)
             if inner.len() >= 4 && (inner[2].as_rule() == Rule::op_add || 
                                     inner[2].as_rule() == Rule::op_sub || 

@@ -6,6 +6,10 @@ authors = ["Aidan Ahern"]
 description = "Pickup: A modern Lua-inspired scripting language"
 license = "MIT"
 
+[[bin]]
+name = "pick"
+path = "src/main.rs"
+
 [dependencies]
 # Parsing
 pest = "2.4"
