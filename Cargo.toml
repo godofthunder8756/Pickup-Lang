@@ -1,0 +1,19 @@
+[package]
+name = "pickup-lang"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <you@example.com>"]
+description = "Pickup: A modern Lua-inspired scripting language"
+license = "MIT"
+
+[dependencies]
+# Parsing
+pest = "2.4"
+pest_derive = "2.4"
+# REPL
+rustyline = "11.0"
+# Error handling
+thiserror = "1.0"
+# JSON support
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

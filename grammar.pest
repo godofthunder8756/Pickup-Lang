@@ -1,0 +1,14 @@
+// Whitespace and comments
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+NEWLINE    = _{ "\r\n" | "\n" }
+COMMENT    = _{ "--" ~ (!NEWLINE ~ ANY)* }
+
+// Tokens
+identifier = @{ (ASCII_ALPHANUMERIC | "_")+ }
+number     = @{ ASCII_DIGIT+ }
+string     = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+
+// Grammar
+program     = { SOI ~ statement* ~ EOI }
+statement   = _{ expression ~ NEWLINE* }
+expression  = _{ number | string | identifier }
