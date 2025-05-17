@@ -48,3 +48,10 @@ thiserror = "1.0"
 # JSON support
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+```
+
+## Bytecode Compiler
+
+The compiler transforms parsed AST nodes into a simple bytecode which is then
+executed by a tiny virtual machine. Running `cargo run` will start the REPL
+using this compiler.
