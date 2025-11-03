@@ -1,0 +1,34 @@
+-- Standard library functions example
+
+-- type() function - returns the type of a value
+print("Type checking:")
+print(type(42))
+print(type("hello"))
+print(type(true))
+print(type(nil))
+
+-- len() function - returns length of strings
+print("String length:")
+message = "Hello, World!"
+print("Length of '" .. message .. "': " .. len(message))
+
+name = "Pickup"
+print("Length of '" .. name .. "': " .. len(name))
+
+-- tostring() function - converts values to strings
+print("Converting to string:")
+num = 42
+str = tostring(num)
+print("Number " .. num .. " as string: " .. str)
+
+-- tonumber() function - converts values to numbers
+print("Converting to number:")
+numStr = "123"
+converted = tonumber(numStr)
+print("String '" .. numStr .. "' as number: " .. converted)
+
+-- Combining functions
+print("Combined example:")
+value = 3.14159
+print("Type: " .. type(value))
+print("As string: " .. tostring(value))

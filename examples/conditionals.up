@@ -1,0 +1,71 @@
+-- Conditional statements example
+
+-- Simple if statement
+x = 10
+
+if x > 5 then
+    print("x is greater than 5")
+end
+
+-- If-else statement
+age = 18
+
+if age >= 18 then
+    print("You are an adult")
+else
+    print("You are a minor")
+end
+
+-- Nested conditionals
+score = 85
+
+if score >= 90 then
+    print("Grade: A")
+else
+    if score >= 80 then
+        print("Grade: B")
+    else
+        if score >= 70 then
+            print("Grade: C")
+        else
+            print("Grade: F")
+        end
+    end
+end
+
+-- Comparison operators
+a = 10
+b = 20
+
+if a == b then
+    print("a equals b")
+end
+
+if a ~= b then
+    print("a does not equal b")
+end
+
+if a < b then
+    print("a is less than b")
+end
+
+if b > a then
+    print("b is greater than a")
+end
+
+-- Logical operators
+temperature = 25
+sunny = true
+
+if temperature > 20 and sunny then
+    print("Perfect beach weather!")
+end
+
+raining = false
+snowing = false
+
+if raining or snowing then
+    print("Bad weather")
+else
+    print("Good weather")
+end
