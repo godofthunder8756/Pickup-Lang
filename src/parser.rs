@@ -56,32 +56,32 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
             if verbose {
                 println!("Assignment inner: {:?}", inner);
             }
-            
+
             // First element is always the identifier
             let id_node = AstNode::Identifier(inner[0].as_str().to_string());
-            
+
             // Check if this is a binary operation with string concatenation (greeting = "Hello, " .. name)
             if inner.len() >= 4 && inner[2].as_rule() == Rule::op_concat {
                 let left = parse_term(inner[1].clone(), verbose)?;
                 let right = parse_term(inner[3].clone(), verbose)?;
-                
+
                 let binary_op = AstNode::BinaryOp(Box::new(left), "..".to_string(), Box::new(right));
                 return Ok(Some(AstNode::Assignment(Box::new(id_node), Box::new(binary_op))));
             }
-            
+
             // Check if this is a binary operation (x = a + b)
-            if inner.len() >= 4 && (inner[2].as_rule() == Rule::op_add || 
-                                    inner[2].as_rule() == Rule::op_sub || 
-                                    inner[2].as_rule() == Rule::op_mul || 
+            if inner.len() >= 4 && (inner[2].as_rule() == Rule::op_add ||
+                                    inner[2].as_rule() == Rule::op_sub ||
+                                    inner[2].as_rule() == Rule::op_mul ||
                                     inner[2].as_rule() == Rule::op_div) {
                 let left = parse_term(inner[1].clone(), verbose)?;
                 let op = inner[2].as_str().to_string();
                 let right = parse_term(inner[3].clone(), verbose)?;
-                
+
                 let binary_op = AstNode::BinaryOp(Box::new(left), op, Box::new(right));
                 return Ok(Some(AstNode::Assignment(Box::new(id_node), Box::new(binary_op))));
             }
-            
+
             // Regular assignment
             let value_node = parse_expression(inner[1].clone(), verbose)?;
             Ok(Some(AstNode::Assignment(Box::new(id_node), Box::new(value_node))))
@@ -99,6 +99,129 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
                 .ok_or_else(|| ParseError::AstError("Missing expression in print statement".into()))?;
             let expr_node = parse_expression(expr, verbose)?;
             Ok(Some(AstNode::Print(Box::new(expr_node))))
+        },
+        Rule::if_stmt => {
+            let mut inner = pair.into_inner();
+
+            // Parse condition
+            let condition = inner.next()
+                .ok_or_else(|| ParseError::AstError("Missing condition in if statement".into()))?;
+            let condition_node = parse_expression(condition, verbose)?;
+
+            // Parse then block
+            let mut then_block = Vec::new();
+            let mut else_block = None;
+            let mut in_else = false;
+
+            for stmt_pair in inner {
+                if verbose {
+                    println!("If statement part: {:?}", stmt_pair);
+                }
+
+                // Check if we're entering the else block
+                if stmt_pair.as_str() == "else" {
+                    in_else = true;
+                    continue;
+                }
+
+                if let Some(stmt) = parse_statement(stmt_pair, verbose)? {
+                    if in_else {
+                        if else_block.is_none() {
+                            else_block = Some(Vec::new());
+                        }
+                        else_block.as_mut().unwrap().push(stmt);
+                    } else {
+                        then_block.push(stmt);
+                    }
+                }
+            }
+
+            Ok(Some(AstNode::If(Box::new(condition_node), then_block, else_block)))
+        },
+        Rule::while_stmt => {
+            let mut inner = pair.into_inner();
+
+            // Parse condition
+            let condition = inner.next()
+                .ok_or_else(|| ParseError::AstError("Missing condition in while statement".into()))?;
+            let condition_node = parse_expression(condition, verbose)?;
+
+            // Parse body
+            let mut body = Vec::new();
+            for stmt_pair in inner {
+                if let Some(stmt) = parse_statement(stmt_pair, verbose)? {
+                    body.push(stmt);
+                }
+            }
+
+            Ok(Some(AstNode::While(Box::new(condition_node), body)))
+        },
+        Rule::for_stmt => {
+            let mut inner = pair.into_inner();
+
+            // Parse loop variable
+            let var_pair = inner.next()
+                .ok_or_else(|| ParseError::AstError("Missing variable in for statement".into()))?;
+            let var_name = var_pair.as_str().to_string();
+
+            // Parse start expression
+            let start = inner.next()
+                .ok_or_else(|| ParseError::AstError("Missing start value in for statement".into()))?;
+            let start_node = parse_expression(start, verbose)?;
+
+            // Parse end expression
+            let end = inner.next()
+                .ok_or_else(|| ParseError::AstError("Missing end value in for statement".into()))?;
+            let end_node = parse_expression(end, verbose)?;
+
+            // Parse body
+            let mut body = Vec::new();
+            for stmt_pair in inner {
+                if let Some(stmt) = parse_statement(stmt_pair, verbose)? {
+                    body.push(stmt);
+                }
+            }
+
+            Ok(Some(AstNode::For(var_name, Box::new(start_node), Box::new(end_node), body)))
+        },
+        Rule::func_def => {
+            let mut inner = pair.into_inner();
+
+            // Parse function name
+            let name_pair = inner.next()
+                .ok_or_else(|| ParseError::AstError("Missing function name".into()))?;
+            let func_name = name_pair.as_str().to_string();
+
+            // Parse parameters
+            let mut params = Vec::new();
+            let mut body = Vec::new();
+            let mut parsing_params = true;
+
+            for p in inner {
+                match p.as_rule() {
+                    Rule::identifier if parsing_params => {
+                        params.push(p.as_str().to_string());
+                    },
+                    _ => {
+                        parsing_params = false;
+                        if let Some(stmt) = parse_statement(p, verbose)? {
+                            body.push(stmt);
+                        }
+                    }
+                }
+            }
+
+            Ok(Some(AstNode::Function(func_name, params, body)))
+        },
+        Rule::return_stmt => {
+            let mut inner = pair.into_inner();
+
+            if let Some(expr_pair) = inner.next() {
+                let expr_node = parse_expression(expr_pair, verbose)?;
+                Ok(Some(AstNode::Return(Some(Box::new(expr_node)))))
+            } else {
+                Ok(Some(AstNode::Return(None)))
+            }
         },
         Rule::expression => {
             let expr = parse_expression(pair, verbose)?;
@@ -216,8 +339,48 @@ fn parse_term(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
             let value = pair.as_str() == "true";
             Ok(AstNode::Boolean(value))
         },
+        Rule::nil_literal => {
+            Ok(AstNode::Nil)
+        },
         Rule::identifier => Ok(AstNode::Identifier(pair.as_str().to_string())),
         Rule::function_call => parse_function_call(pair, verbose),
+        Rule::table_literal => {
+            let mut entries = Vec::new();
+            let mut index = 0;
+
+            for entry_pair in pair.into_inner() {
+                if entry_pair.as_rule() == Rule::table_entry {
+                    let mut inner = entry_pair.into_inner();
+
+                    // Check if it's a key-value pair or just a value
+                    let first = inner.next().unwrap();
+                    if let Some(second) = inner.next() {
+                        // Key-value pair: [key] = value
+                        let key = parse_expression(first, verbose)?;
+                        let value = parse_expression(second, verbose)?;
+                        entries.push((key, value));
+                    } else {
+                        // Just a value, use auto-incrementing index
+                        let key = AstNode::Number(index as f64);
+                        let value = parse_expression(first, verbose)?;
+                        entries.push((key, value));
+                        index += 1;
+                    }
+                }
+            }
+
+            Ok(AstNode::Table(entries))
+        },
+        Rule::table_access => {
+            let mut inner = pair.into_inner();
+            let table = inner.next().unwrap();
+            let key = inner.next().unwrap();
+
+            let table_node = AstNode::Identifier(table.as_str().to_string());
+            let key_node = parse_expression(key, verbose)?;
+
+            Ok(AstNode::TableAccess(Box::new(table_node), Box::new(key_node)))
+        },
         Rule::op_add | Rule::op_sub | Rule::op_mul | Rule::op_div | Rule::op_concat => {
             // Binary operators are handled in parse_expression, this should not happen
             Err(ParseError::AstError(format!("Unexpected operator rule: {:?}", pair.as_rule())))

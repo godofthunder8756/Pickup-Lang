@@ -1,0 +1,117 @@
+-- Comprehensive Pickup language example
+-- Demonstrates variables, operators, control flow, loops, and standard library
+
+print("=== Welcome to Pickup Language ===")
+
+-- Variables and basic operations
+print("--- Basic Operations ---")
+x = 10
+y = 5
+print("x = " .. x)
+print("y = " .. y)
+print("x + y = " .. (x + y))
+print("x - y = " .. (x - y))
+print("x * y = " .. (x * y))
+print("x / y = " .. (x / y))
+
+-- String operations
+print("--- String Operations ---")
+firstName = "Pickup"
+lastName = "Language"
+fullName = firstName .. " " .. lastName
+print("Full name: " .. fullName)
+print("Length: " .. len(fullName))
+
+-- Conditionals and comparisons
+print("--- Conditionals ---")
+age = 25
+
+if age >= 18 then
+    print("Status: Adult")
+
+    if age >= 65 then
+        print("Category: Senior")
+    else
+        if age >= 21 then
+            print("Category: Full adult")
+        else
+            print("Category: Young adult")
+        end
+    end
+else
+    print("Status: Minor")
+end
+
+-- Loops: For loop
+print("--- For Loop: Fibonacci-like sequence ---")
+a = 0
+b = 1
+for i = 1, 8 do
+    print(b)
+    temp = b
+    b = a + b
+    a = temp
+end
+
+-- Loops: While loop
+print("--- While Loop: Powers of 3 ---")
+power = 1
+count = 0
+while count < 5 do
+    print("3^" .. count .. " = " .. power)
+    power = power * 3
+    count = count + 1
+end
+
+-- Standard library functions
+print("--- Type Checking ---")
+value1 = 42
+value2 = "hello"
+value3 = true
+
+print(value1 .. " is a " .. type(value1))
+print(value2 .. " is a " .. type(value2))
+print("true is a " .. type(value3))
+
+-- Logical operators
+print("--- Logical Operators ---")
+temperature = 22
+humidity = 60
+
+if temperature > 20 and humidity < 70 then
+    print("Weather: Comfortable")
+end
+
+isWeekend = true
+isHoliday = false
+
+if isWeekend or isHoliday then
+    print("Status: Day off!")
+end
+
+-- Complex expressions
+print("--- Complex Expressions ---")
+x = 5
+y = 10
+z = 15
+
+result = x * 2 + y / 2
+print("5 * 2 + 10 / 2 = " .. result)
+
+if x < y and y < z then
+    print("x < y < z is true")
+end
+
+-- Boolean values
+print("--- Boolean Values ---")
+flag1 = true
+flag2 = false
+print("true and false = " .. (flag1 and flag2))
+print("true or false = " .. (flag1 or flag2))
+
+-- Nil value
+print("--- Nil Value ---")
+nothing = nil
+print("Type of nil: " .. type(nothing))
+
+print("=== End of Demo ===")

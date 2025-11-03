@@ -5,6 +5,8 @@ use crate::ast::AstNode;
 pub enum Instruction {
     PushNumber(f64),
     PushString(String),
+    PushBoolean(bool),
+    PushNil,
     LoadVar(String),
     StoreVar(String),
     Add,
@@ -12,7 +14,26 @@ pub enum Instruction {
     Mul,
     Div,
     Concat,
+    // Comparison operators
+    Equal,
+    NotEqual,
+    LessThan,
+    GreaterThan,
+    LessEqual,
+    GreaterEqual,
+    // Logical operators
+    And,
+    Or,
+    Not,
+    // Control flow
+    Jump(usize),
+    JumpIfFalse(usize),
+    // Functions
+    Call(String, usize), // function name, arg count
+    Return,
+    // Other
     Print,
+    Pop,
 }
 
 /// Compile an AST to bytecode instructions.
@@ -37,6 +58,8 @@ impl Compiler {
             }
             AstNode::Number(n) => code.push(Instruction::PushNumber(*n)),
             AstNode::String(s) => code.push(Instruction::PushString(s.clone())),
+            AstNode::Boolean(b) => code.push(Instruction::PushBoolean(*b)),
+            AstNode::Nil => code.push(Instruction::PushNil),
             AstNode::Identifier(id) => code.push(Instruction::LoadVar(id.clone())),
             AstNode::Assignment(var, expr) => {
                 // var is Identifier
@@ -54,6 +77,14 @@ impl Compiler {
                     "*" => code.push(Instruction::Mul),
                     "/" => code.push(Instruction::Div),
                     ".." => code.push(Instruction::Concat),
+                    "==" => code.push(Instruction::Equal),
+                    "~=" => code.push(Instruction::NotEqual),
+                    "<" => code.push(Instruction::LessThan),
+                    ">" => code.push(Instruction::GreaterThan),
+                    "<=" => code.push(Instruction::LessEqual),
+                    ">=" => code.push(Instruction::GreaterEqual),
+                    "and" => code.push(Instruction::And),
+                    "or" => code.push(Instruction::Or),
                     _ => {}
                 }
             }
@@ -61,7 +92,154 @@ impl Compiler {
                 Self::compile_node(expr, code);
                 code.push(Instruction::Print);
             }
-            _ => {}
+            AstNode::If(condition, then_block, else_block) => {
+                // Compile condition
+                Self::compile_node(condition, code);
+
+                // Placeholder for JumpIfFalse instruction
+                let jump_to_else_idx = code.len();
+                code.push(Instruction::JumpIfFalse(0)); // Will be patched
+
+                // Compile then block
+                for stmt in then_block {
+                    Self::compile_node(stmt, code);
+                }
+
+                if let Some(else_stmts) = else_block {
+                    // Jump over else block after then block
+                    let jump_to_end_idx = code.len();
+                    code.push(Instruction::Jump(0)); // Will be patched
+
+                    // Patch the jump to else
+                    let else_start = code.len();
+                    code[jump_to_else_idx] = Instruction::JumpIfFalse(else_start);
+
+                    // Compile else block
+                    for stmt in else_stmts {
+                        Self::compile_node(stmt, code);
+                    }
+
+                    // Patch the jump to end
+                    let end_pos = code.len();
+                    code[jump_to_end_idx] = Instruction::Jump(end_pos);
+                } else {
+                    // No else block, just patch the jump to end
+                    let end_pos = code.len();
+                    code[jump_to_else_idx] = Instruction::JumpIfFalse(end_pos);
+                }
+            }
+            AstNode::While(condition, body) => {
+                let loop_start = code.len();
+
+                // Compile condition
+                Self::compile_node(condition, code);
+
+                // Jump to end if condition is false
+                let jump_to_end_idx = code.len();
+                code.push(Instruction::JumpIfFalse(0)); // Will be patched
+
+                // Compile body
+                for stmt in body {
+                    Self::compile_node(stmt, code);
+                }
+
+                // Jump back to loop start
+                code.push(Instruction::Jump(loop_start));
+
+                // Patch the jump to end
+                let end_pos = code.len();
+                code[jump_to_end_idx] = Instruction::JumpIfFalse(end_pos);
+            }
+            AstNode::For(var, start, end, body) => {
+                // Initialize loop variable
+                Self::compile_node(start, code);
+                code.push(Instruction::StoreVar(var.clone()));
+
+                let loop_start = code.len();
+
+                // Load loop variable and end value
+                code.push(Instruction::LoadVar(var.clone()));
+                Self::compile_node(end, code);
+
+                // Check if loop variable <= end
+                code.push(Instruction::LessEqual);
+
+                // Jump to end if condition is false
+                let jump_to_end_idx = code.len();
+                code.push(Instruction::JumpIfFalse(0)); // Will be patched
+
+                // Compile body
+                for stmt in body {
+                    Self::compile_node(stmt, code);
+                }
+
+                // Increment loop variable
+                code.push(Instruction::LoadVar(var.clone()));
+                code.push(Instruction::PushNumber(1.0));
+                code.push(Instruction::Add);
+                code.push(Instruction::StoreVar(var.clone()));
+
+                // Jump back to loop start
+                code.push(Instruction::Jump(loop_start));
+
+                // Patch the jump to end
+                let end_pos = code.len();
+                code[jump_to_end_idx] = Instruction::JumpIfFalse(end_pos);
+            }
+            AstNode::Function(name, params, body) => {
+                // Store function as a value containing jump address
+                let jump_over_func_idx = code.len();
+                code.push(Instruction::Jump(0)); // Will jump over function body
+
+                let func_start = code.len();
+
+                // Compile function body
+                for stmt in body {
+                    Self::compile_node(stmt, code);
+                }
+
+                // Implicit return nil if no return statement
+                code.push(Instruction::PushNil);
+                code.push(Instruction::Return);
+
+                // Patch jump to skip function definition
+                let after_func = code.len();
+                code[jump_over_func_idx] = Instruction::Jump(after_func);
+
+                // Store function metadata (simplified - just store the address)
+                // In a real implementation, we'd create a Function value
+                // For now, we'll just note where the function is defined
+            }
+            AstNode::Return(expr) => {
+                if let Some(value) = expr {
+                    Self::compile_node(value, code);
+                } else {
+                    code.push(Instruction::PushNil);
+                }
+                code.push(Instruction::Return);
+            }
+            AstNode::FunctionCall(name, args) => {
+                // Push arguments onto stack
+                for arg in args {
+                    Self::compile_node(arg, code);
+                }
+
+                // Call function
+                code.push(Instruction::Call(name.clone(), args.len()));
+            }
+            AstNode::Table(_entries) => {
+                // For now, just push nil - full table implementation would be more complex
+                code.push(Instruction::PushNil);
+            }
+            AstNode::TableAccess(_table, _key) => {
+                // For now, just push nil - full table implementation would be more complex
+                code.push(Instruction::PushNil);
+            }
+            AstNode::Block(stmts) => {
+                for stmt in stmts {
+                    Self::compile_node(stmt, code);
+                }
+            }
         }
     }
 }
@@ -73,6 +251,8 @@ pub enum Value {
     String(String),
     Boolean(bool),
     Nil,
+    Table(std::collections::HashMap<String, Value>),
+    Function(usize, Vec<String>), // bytecode offset, parameter names
 }
 
 impl std::fmt::Display for Value {
@@ -82,6 +262,15 @@ impl std::fmt::Display for Value {
             Value::String(s) => write!(f, "{}", s),
             Value::Boolean(b) => write!(f, "{}", b),
             Value::Nil => write!(f, "nil"),
+            Value::Table(map) => {
+                write!(f, "{{")?;
+                let entries: Vec<String> = map.iter()
+                    .map(|(k, v)| format!("{}: {}", k, v))
+                    .collect();
+                write!(f, "{}", entries.join(", "))?;
+                write!(f, "}}")
+            },
+            Value::Function(_, _) => write!(f, "<function>"),
         }
     }
 }
@@ -92,42 +281,57 @@ pub struct Vm;
 impl Vm {
     pub fn execute(code: &[Instruction], verbose: bool) {
         use std::collections::HashMap;
-        let mut stack: Vec<String> = Vec::new();
-        let mut vars: HashMap<String, String> = HashMap::new();
-        
+        let mut stack: Vec<Value> = Vec::new();
+        let mut vars: HashMap<String, Value> = HashMap::new();
+        let mut pc = 0; // program counter
+
         if verbose {
             println!("\n--- VM Execution Log ---");
         }
-        
-        for (i, inst) in code.iter().enumerate() {
+
+        while pc < code.len() {
+            let inst = &code[pc];
+
             if verbose {
-                println!("Instruction {}: {:?}", i, inst);
+                println!("Instruction {}: {:?}", pc, inst);
             }
-            
+
             match inst {
                 Instruction::PushNumber(n) => {
-                    stack.push(n.to_string());
+                    stack.push(Value::Number(*n));
                     if verbose {
                         println!("  Pushed number {}", n);
                     }
                 },
                 Instruction::PushString(s) => {
-                    stack.push(s.clone());
+                    stack.push(Value::String(s.clone()));
                     if verbose {
                         println!("  Pushed string \"{}\"", s);
                     }
                 },
+                Instruction::PushBoolean(b) => {
+                    stack.push(Value::Boolean(*b));
+                    if verbose {
+                        println!("  Pushed boolean {}", b);
+                    }
+                },
+                Instruction::PushNil => {
+                    stack.push(Value::Nil);
+                    if verbose {
+                        println!("  Pushed nil");
+                    }
+                },
                 Instruction::LoadVar(name) => {
-                    let val = vars.get(name).cloned().unwrap_or_default();
+                    let val = vars.get(name).cloned().unwrap_or(Value::Nil);
                     stack.push(val.clone());
                     if verbose {
-                        println!("  Loaded var {} = \"{}\"", name, val);
+                        println!("  Loaded var {} = {}", name, val);
                     }
                 }
                 Instruction::StoreVar(name) => {
                     if let Some(val) = stack.pop() {
                         if verbose {
-                            println!("  Stored \"{}\" in var {}", val, name);
+                            println!("  Stored {} in var {}", val, name);
                         }
                         vars.insert(name.clone(), val);
                     }
@@ -135,69 +339,307 @@ impl Vm {
                 Instruction::Add => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
-                    let res = a.parse::<f64>().unwrap() + b.parse::<f64>().unwrap();
-                    stack.push(res.to_string());
+                    let res = Self::add_values(a, b);
                     if verbose {
-                        println!("  Add: {} + {} = {}", a, b, res);
+                        println!("  Add result: {}", res);
                     }
+                    stack.push(res);
                 }
                 Instruction::Sub => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
-                    let res = a.parse::<f64>().unwrap() - b.parse::<f64>().unwrap();
-                    stack.push(res.to_string());
+                    let res = Self::sub_values(a, b);
                     if verbose {
-                        println!("  Sub: {} - {} = {}", a, b, res);
+                        println!("  Sub result: {}", res);
                     }
+                    stack.push(res);
                 }
                 Instruction::Mul => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
-                    let res = a.parse::<f64>().unwrap() * b.parse::<f64>().unwrap();
-                    stack.push(res.to_string());
+                    let res = Self::mul_values(a, b);
                     if verbose {
-                        println!("  Mul: {} * {} = {}", a, b, res);
+                        println!("  Mul result: {}", res);
                     }
+                    stack.push(res);
                 }
                 Instruction::Div => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
-                    let res = a.parse::<f64>().unwrap() / b.parse::<f64>().unwrap();
-                    stack.push(res.to_string());
+                    let res = Self::div_values(a, b);
                     if verbose {
-                        println!("  Div: {} / {} = {}", a, b, res);
+                        println!("  Div result: {}", res);
                     }
+                    stack.push(res);
                 }
                 Instruction::Concat => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
-                    let result = format!("{}{}", a, b);
-                    stack.push(result.clone());
+                    let result = Value::String(format!("{}{}", a, b));
                     if verbose {
-                        println!("  Concat: \"{}\" .. \"{}\" = \"{}\"", a, b, result);
+                        println!("  Concat result: {}", result);
+                    }
+                    stack.push(result);
+                }
+                Instruction::Equal => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let res = Self::equal_values(&a, &b);
+                    if verbose {
+                        println!("  Equal: {} == {} = {}", a, b, res);
+                    }
+                    stack.push(Value::Boolean(res));
+                }
+                Instruction::NotEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let res = !Self::equal_values(&a, &b);
+                    if verbose {
+                        println!("  NotEqual: {} ~= {} = {}", a, b, res);
+                    }
+                    stack.push(Value::Boolean(res));
+                }
+                Instruction::LessThan => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let res = Self::less_than(&a, &b);
+                    if verbose {
+                        println!("  LessThan: {} < {} = {}", a, b, res);
+                    }
+                    stack.push(Value::Boolean(res));
+                }
+                Instruction::GreaterThan => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let res = Self::less_than(&b, &a);
+                    if verbose {
+                        println!("  GreaterThan: {} > {} = {}", a, b, res);
+                    }
+                    stack.push(Value::Boolean(res));
+                }
+                Instruction::LessEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let res = Self::less_than(&a, &b) || Self::equal_values(&a, &b);
+                    if verbose {
+                        println!("  LessEqual: {} <= {} = {}", a, b, res);
+                    }
+                    stack.push(Value::Boolean(res));
+                }
+                Instruction::GreaterEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let res = Self::less_than(&b, &a) || Self::equal_values(&a, &b);
+                    if verbose {
+                        println!("  GreaterEqual: {} >= {} = {}", a, b, res);
+                    }
+                    stack.push(Value::Boolean(res));
+                }
+                Instruction::And => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let res = Self::is_truthy(&a) && Self::is_truthy(&b);
+                    if verbose {
+                        println!("  And: {} and {} = {}", a, b, res);
+                    }
+                    stack.push(Value::Boolean(res));
+                }
+                Instruction::Or => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let res = Self::is_truthy(&a) || Self::is_truthy(&b);
+                    if verbose {
+                        println!("  Or: {} or {} = {}", a, b, res);
+                    }
+                    stack.push(Value::Boolean(res));
+                }
+                Instruction::Not => {
+                    let a = stack.pop().unwrap();
+                    let res = !Self::is_truthy(&a);
+                    if verbose {
+                        println!("  Not: not {} = {}", a, res);
+                    }
+                    stack.push(Value::Boolean(res));
+                }
+                Instruction::Jump(target) => {
+                    if verbose {
+                        println!("  Jump to {}", target);
+                    }
+                    pc = *target;
+                    continue;
+                }
+                Instruction::JumpIfFalse(target) => {
+                    let condition = stack.pop().unwrap();
+                    let is_false = !Self::is_truthy(&condition);
+                    if verbose {
+                        println!("  JumpIfFalse: {} -> {}", condition, is_false);
+                    }
+                    if is_false {
+                        pc = *target;
+                        continue;
                     }
                 }
                 Instruction::Print => {
                     if let Some(val) = stack.pop() {
                         if verbose {
-                            println!("  Print: \"{}\"", val);
+                            println!("  Print: {}", val);
                             println!(">> {}", val);
                         } else {
                             println!("{}", val);
                         }
                     }
                 }
+                Instruction::Pop => {
+                    stack.pop();
+                    if verbose {
+                        println!("  Popped value from stack");
+                    }
+                }
+                Instruction::Call(func_name, arg_count) => {
+                    // Handle built-in functions
+                    match func_name.as_str() {
+                        "type" => {
+                            if *arg_count > 0 {
+                                let val = stack.pop().unwrap();
+                                let type_str = match val {
+                                    Value::Number(_) => "number",
+                                    Value::String(_) => "string",
+                                    Value::Boolean(_) => "boolean",
+                                    Value::Nil => "nil",
+                                    Value::Table(_) => "table",
+                                    Value::Function(_, _) => "function",
+                                };
+                                stack.push(Value::String(type_str.to_string()));
+                                if verbose {
+                                    println!("  type() returned: {}", type_str);
+                                }
+                            }
+                        }
+                        "len" => {
+                            if *arg_count > 0 {
+                                let val = stack.pop().unwrap();
+                                let length = match val {
+                                    Value::String(s) => s.len() as f64,
+                                    Value::Table(t) => t.len() as f64,
+                                    _ => 0.0,
+                                };
+                                stack.push(Value::Number(length));
+                                if verbose {
+                                    println!("  len() returned: {}", length);
+                                }
+                            }
+                        }
+                        "tostring" => {
+                            if *arg_count > 0 {
+                                let val = stack.pop().unwrap();
+                                stack.push(Value::String(val.to_string()));
+                                if verbose {
+                                    println!("  tostring() returned: {}", val);
+                                }
+                            }
+                        }
+                        "tonumber" => {
+                            if *arg_count > 0 {
+                                let val = stack.pop().unwrap();
+                                let num = match val {
+                                    Value::Number(n) => n,
+                                    Value::String(s) => s.parse::<f64>().unwrap_or(0.0),
+                                    Value::Boolean(b) => if b { 1.0 } else { 0.0 },
+                                    _ => 0.0,
+                                };
+                                stack.push(Value::Number(num));
+                                if verbose {
+                                    println!("  tonumber() returned: {}", num);
+                                }
+                            }
+                        }
+                        _ => {
+                            if verbose {
+                                println!("  Unknown function: {}", func_name);
+                            }
+                            stack.push(Value::Nil);
+                        }
+                    }
+                }
+                Instruction::Return => {
+                    // For now, just a placeholder
+                    // Full implementation would require call stack management
+                    if verbose {
+                        println!("  Return instruction (not fully implemented)");
+                    }
+                }
+                _ => {
+                    if verbose {
+                        println!("  Unimplemented instruction: {:?}", inst);
+                    }
+                }
             }
-            
+
             if verbose {
                 println!("  Stack: {:?}", stack);
                 println!("  Vars: {:?}", vars);
                 println!("");
             }
+
+            pc += 1;
         }
-        
+
         if verbose {
             println!("--- VM Execution Completed ---\n");
+        }
+    }
+
+    fn add_values(a: Value, b: Value) -> Value {
+        match (a, b) {
+            (Value::Number(x), Value::Number(y)) => Value::Number(x + y),
+            _ => Value::Nil,
+        }
+    }
+
+    fn sub_values(a: Value, b: Value) -> Value {
+        match (a, b) {
+            (Value::Number(x), Value::Number(y)) => Value::Number(x - y),
+            _ => Value::Nil,
+        }
+    }
+
+    fn mul_values(a: Value, b: Value) -> Value {
+        match (a, b) {
+            (Value::Number(x), Value::Number(y)) => Value::Number(x * y),
+            _ => Value::Nil,
+        }
+    }
+
+    fn div_values(a: Value, b: Value) -> Value {
+        match (a, b) {
+            (Value::Number(x), Value::Number(y)) => Value::Number(x / y),
+            _ => Value::Nil,
+        }
+    }
+
+    fn equal_values(a: &Value, b: &Value) -> bool {
+        match (a, b) {
+            (Value::Number(x), Value::Number(y)) => x == y,
+            (Value::String(x), Value::String(y)) => x == y,
+            (Value::Boolean(x), Value::Boolean(y)) => x == y,
+            (Value::Nil, Value::Nil) => true,
+            _ => false,
+        }
+    }
+
+    fn less_than(a: &Value, b: &Value) -> bool {
+        match (a, b) {
+            (Value::Number(x), Value::Number(y)) => x < y,
+            (Value::String(x), Value::String(y)) => x < y,
+            _ => false,
+        }
+    }
+
+    fn is_truthy(val: &Value) -> bool {
+        match val {
+            Value::Nil => false,
+            Value::Boolean(b) => *b,
+            _ => true,
         }
     }
 }
