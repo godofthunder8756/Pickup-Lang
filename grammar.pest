@@ -20,8 +20,8 @@ op_lt    = { "<" }
 op_gt    = { ">" }
 op_le    = { "<=" }
 op_ge    = { ">=" }
-op_and   = { "and" }
-op_or    = { "or" }
+op_and   = @{ "and" ~ !ASCII_ALPHANUMERIC }
+op_or    = @{ "or" ~ !ASCII_ALPHANUMERIC }
 op_concat = { ".." }
 
 operator = _{ op_eq | op_neq | op_le | op_ge | op_lt | op_gt | op_add | op_sub | op_mul | op_div | op_and | op_or | op_concat }

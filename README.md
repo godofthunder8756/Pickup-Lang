@@ -42,8 +42,69 @@ All roadmap features are now implemented! ✅
 2. ✅ File execution for script usage
 3. ✅ Parser → AST → Interpreter (bytecode compiler & VM)
 4. ✅ Module system + std lib
+5. ✅ Control flow (if/else/elseif)
+6. ✅ Loops (while, for)
+7. ✅ Comparison operators (==, ~=, <, >, <=, >=)
+8. ✅ Logical operators (and, or, not)
+9. ✅ Enhanced standard library (JSON, FS, String, Math modules)
+10. ✅ Comprehensive test suite
 
 ## Language Features
+
+### Control Flow
+```pickup
+-- If-else statements
+score = 85
+if score >= 90 then
+    print("Grade: A")
+elseif score >= 80 then
+    print("Grade: B")
+elseif score >= 70 then
+    print("Grade: C")
+else
+    print("Grade: F")
+end
+```
+
+### Loops
+```pickup
+-- While loop
+i = 1
+while i <= 5 do
+    print(i)
+    i = i + 1
+end
+
+-- For loop
+for j = 1, 10 do
+    print(j)
+end
+
+-- For loop with step
+for k = 0, 20, 2 do
+    print(k)  -- Prints even numbers
+end
+```
+
+### Comparison and Logical Operators
+```pickup
+-- Comparison operators
+a = 10
+b = 20
+print(a == b)  -- false (equal)
+print(a ~= b)  -- true (not equal)
+print(a < b)   -- true (less than)
+print(a > b)   -- false (greater than)
+print(a <= b)  -- true (less or equal)
+print(a >= b)  -- false (greater or equal)
+
+-- Logical operators
+x = true
+y = false
+print(x and y)  -- false
+print(x or y)   -- true
+print(not x)    -- false
+```
 
 ### Arrays and Tables (0-based indexing)
 ```pickup
@@ -60,10 +121,27 @@ print(fruits[2])  -- Prints: cherry
 -- Import standard library modules
 import "json"
 import "fs"
+import "string"
+import "math"
 
--- Modules are loaded and available
--- (Native function implementations coming soon)
+-- Modules provide various utilities
+-- (Native function implementations for real I/O coming soon)
 ```
+
+### Standard Library
+
+#### Math Module
+- Constants: `pi`, `e`
+- Functions: `floor`, `ceil`, `round`, `abs`, `min`, `max`, `sqrt`, `pow`, `sin`, `cos`, `tan`, `random`
+
+#### String Module
+- Functions: `length`, `upper`, `lower`, `substring`, `split`, `trim`, `replace`
+
+#### JSON Module
+- Functions: `parse`, `stringify`
+
+#### FS Module
+- Functions: `read`, `write`, `exists`, `readdir`, `mkdir`
 
 ### String Operations
 ```pickup
@@ -82,7 +160,13 @@ print(message)
 x = 10
 y = 20
 sum = x + y
-print(sum)  -- Prints: 30
+diff = x - y
+prod = x * y
+quot = x / y
+print(sum)   -- Prints: 30
+print(diff)  -- Prints: -10
+print(prod)  -- Prints: 200
+print(quot)  -- Prints: 0.5
 
 -- Supported operators: +, -, *, /
 ```
@@ -93,6 +177,7 @@ print(sum)  -- Prints: 30
 x = 42
 name = "Alice"
 active = true
+nothing = nil
 
 -- Expression assignment
 result = x + y * 2
