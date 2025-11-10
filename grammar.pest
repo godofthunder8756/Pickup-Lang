@@ -27,15 +27,20 @@ op_concat = { ".." }
 operator = _{ op_add | op_sub | op_mul | op_div | op_eq | op_neq | op_lt | op_gt | op_le | op_ge | op_and | op_or | op_concat }
 
 // Keywords
-keyword = _{ "if" | "then" | "else" | "end" | "function" | "return" | "for" | "do" | "while" | "break" | "true" | "false" | "nil" }
+keyword = _{ "if" | "then" | "else" | "end" | "function" | "return" | "for" | "do" | "while" | "break" | "true" | "false" | "nil" | "import" | "from" | "require" }
 
 // Grammar
 program     = { SOI ~ statement* ~ EOI }
-statement   = _{ (assignment | function_call | print_stmt) ~ NEWLINE* }
-expression  = _{ term ~ (operator ~ term)* }
-term        = _{ number | string | boolean | function_call | identifier | "(" ~ expression ~ ")" }
+statement   = _{ (import_stmt | assignment | function_call | print_stmt) ~ NEWLINE* }
+expression  = { term ~ (operator ~ term)* }
+term        = _{ index_access | table | number | string | boolean | function_call | identifier | "(" ~ expression ~ ")" }
 
 // Statements
+import_stmt = { "import" ~ string }
 assignment  = { identifier ~ "=" ~ expression }
 function_call = { identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
 print_stmt  = { "print" ~ "(" ~ expression ~ ")" }
+
+// Table and indexing
+table = { "[" ~ (expression ~ ("," ~ expression)*)? ~ "]" }
+index_access = { (identifier | table) ~ "[" ~ expression ~ "]" }

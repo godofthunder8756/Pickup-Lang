@@ -51,6 +51,16 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
         println!("Parsing statement: {:?}", pair);
     }
     match pair.as_rule() {
+        Rule::import_stmt => {
+            let mut inner = pair.into_inner();
+            let module_path = inner.next().ok_or_else(|| {
+                ParseError::AstError("Missing module path in import statement".into())
+            })?;
+            // Remove quotes from string
+            let path_str = module_path.as_str();
+            let module = &path_str[1..path_str.len() - 1];
+            Ok(Some(AstNode::Import(module.to_string())))
+        }
         Rule::assignment => {
             let inner: Vec<_> = pair.into_inner().collect();
             if verbose {
@@ -60,38 +70,7 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
             // First element is always the identifier
             let id_node = AstNode::Identifier(inner[0].as_str().to_string());
 
-            // Check if this is a binary operation with string concatenation (greeting = "Hello, " .. name)
-            if inner.len() >= 4 && inner[2].as_rule() == Rule::op_concat {
-                let left = parse_term(inner[1].clone(), verbose)?;
-                let right = parse_term(inner[3].clone(), verbose)?;
-
-                let binary_op =
-                    AstNode::BinaryOp(Box::new(left), "..".to_string(), Box::new(right));
-                return Ok(Some(AstNode::Assignment(
-                    Box::new(id_node),
-                    Box::new(binary_op),
-                )));
-            }
-
-            // Check if this is a binary operation (x = a + b)
-            if inner.len() >= 4
-                && (inner[2].as_rule() == Rule::op_add
-                    || inner[2].as_rule() == Rule::op_sub
-                    || inner[2].as_rule() == Rule::op_mul
-                    || inner[2].as_rule() == Rule::op_div)
-            {
-                let left = parse_term(inner[1].clone(), verbose)?;
-                let op = inner[2].as_str().to_string();
-                let right = parse_term(inner[3].clone(), verbose)?;
-
-                let binary_op = AstNode::BinaryOp(Box::new(left), op, Box::new(right));
-                return Ok(Some(AstNode::Assignment(
-                    Box::new(id_node),
-                    Box::new(binary_op),
-                )));
-            }
-
-            // Regular assignment
+            // Parse the right-hand side as a full expression
             let value_node = parse_expression(inner[1].clone(), verbose)?;
             Ok(Some(AstNode::Assignment(
                 Box::new(id_node),
@@ -230,6 +209,22 @@ fn parse_term(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
         }
         Rule::identifier => Ok(AstNode::Identifier(pair.as_str().to_string())),
         Rule::function_call => parse_function_call(pair, verbose),
+        Rule::table => {
+            let mut elements = Vec::new();
+            for inner_pair in pair.into_inner() {
+                elements.push(parse_expression(inner_pair, verbose)?);
+            }
+            Ok(AstNode::Table(elements))
+        }
+        Rule::index_access => {
+            let inner: Vec<_> = pair.into_inner().collect();
+            if inner.len() < 2 {
+                return Err(ParseError::AstError("Invalid index access".into()));
+            }
+            let base = parse_term(inner[0].clone(), verbose)?;
+            let index = parse_expression(inner[1].clone(), verbose)?;
+            Ok(AstNode::Index(Box::new(base), Box::new(index)))
+        }
         Rule::op_add | Rule::op_sub | Rule::op_mul | Rule::op_div | Rule::op_concat => {
             // Binary operators are handled in parse_expression, this should not happen
             Err(ParseError::AstError(format!(

@@ -1,0 +1,13 @@
+-- modules.up - Test file for module system
+
+-- Import standard library modules
+import "json"
+import "fs"
+
+-- Test that modules are loaded
+print("JSON module loaded")
+print("FS module loaded")
+
+-- In the future, these would be used like:
+-- data = json.parse('{"key": "value"}')
+-- content = fs.read("file.txt")

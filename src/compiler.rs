@@ -1,10 +1,12 @@
 use crate::ast::AstNode;
+use std::collections::HashMap;
 
 /// Bytecode instructions for the Pickup VM.
 #[derive(Debug, Clone)]
 pub enum Instruction {
     PushNumber(f64),
     PushString(String),
+    PushBoolean(bool),
     LoadVar(String),
     StoreVar(String),
     Add,
@@ -13,6 +15,9 @@ pub enum Instruction {
     Div,
     Concat,
     Print,
+    MakeTable(usize),  // Create a table with n elements from stack
+    GetIndex,          // Get value at index from table
+    LoadModule(String), // Load standard library module
 }
 
 /// Compile an AST to bytecode instructions.
@@ -37,6 +42,7 @@ impl Compiler {
             }
             AstNode::Number(n) => code.push(Instruction::PushNumber(*n)),
             AstNode::String(s) => code.push(Instruction::PushString(s.clone())),
+            AstNode::Boolean(b) => code.push(Instruction::PushBoolean(*b)),
             AstNode::Identifier(id) => code.push(Instruction::LoadVar(id.clone())),
             AstNode::Assignment(var, expr) => {
                 // var is Identifier
@@ -61,6 +67,20 @@ impl Compiler {
                 Self::compile_node(expr, code);
                 code.push(Instruction::Print);
             }
+            AstNode::Table(elements) => {
+                for elem in elements {
+                    Self::compile_node(elem, code);
+                }
+                code.push(Instruction::MakeTable(elements.len()));
+            }
+            AstNode::Index(base, index) => {
+                Self::compile_node(base, code);
+                Self::compile_node(index, code);
+                code.push(Instruction::GetIndex);
+            }
+            AstNode::Import(module) => {
+                code.push(Instruction::LoadModule(module.clone()));
+            }
             _ => {}
         }
     }
@@ -72,6 +92,8 @@ pub enum Value {
     Number(f64),
     String(String),
     Boolean(bool),
+    Table(Vec<Value>),
+    Module(HashMap<String, Value>),
     Nil,
 }
 
@@ -81,8 +103,28 @@ impl std::fmt::Display for Value {
             Value::Number(n) => write!(f, "{}", n),
             Value::String(s) => write!(f, "{}", s),
             Value::Boolean(b) => write!(f, "{}", b),
+            Value::Table(elems) => {
+                let items: Vec<String> = elems.iter().map(|v| v.to_string()).collect();
+                write!(f, "[{}]", items.join(", "))
+            }
+            Value::Module(_) => write!(f, "<module>"),
             Value::Nil => write!(f, "nil"),
         }
+    }
+}
+
+// Helper to convert string representation to Value
+fn string_to_value(s: &str) -> Value {
+    if let Ok(n) = s.parse::<f64>() {
+        Value::Number(n)
+    } else if s == "true" {
+        Value::Boolean(true)
+    } else if s == "false" {
+        Value::Boolean(false)
+    } else if s == "nil" {
+        Value::Nil
+    } else {
+        Value::String(s.to_string())
     }
 }
 
@@ -91,9 +133,11 @@ pub struct Vm;
 
 impl Vm {
     pub fn execute(code: &[Instruction], verbose: bool) {
-        use std::collections::HashMap;
-        let mut stack: Vec<String> = Vec::new();
-        let mut vars: HashMap<String, String> = HashMap::new();
+        let mut stack: Vec<Value> = Vec::new();
+        let mut vars: HashMap<String, Value> = HashMap::new();
+        
+        // Initialize standard library
+        let stdlib = crate::stdlib::create_stdlib();
 
         if verbose {
             println!("\n--- VM Execution Log ---");
@@ -106,28 +150,34 @@ impl Vm {
 
             match inst {
                 Instruction::PushNumber(n) => {
-                    stack.push(n.to_string());
+                    stack.push(Value::Number(*n));
                     if verbose {
                         println!("  Pushed number {}", n);
                     }
                 }
                 Instruction::PushString(s) => {
-                    stack.push(s.clone());
+                    stack.push(Value::String(s.clone()));
                     if verbose {
                         println!("  Pushed string \"{}\"", s);
                     }
                 }
+                Instruction::PushBoolean(b) => {
+                    stack.push(Value::Boolean(*b));
+                    if verbose {
+                        println!("  Pushed boolean {}", b);
+                    }
+                }
                 Instruction::LoadVar(name) => {
-                    let val = vars.get(name).cloned().unwrap_or_default();
+                    let val = vars.get(name).cloned().unwrap_or(Value::Nil);
                     stack.push(val.clone());
                     if verbose {
-                        println!("  Loaded var {} = \"{}\"", name, val);
+                        println!("  Loaded var {} = {:?}", name, val);
                     }
                 }
                 Instruction::StoreVar(name) => {
                     if let Some(val) = stack.pop() {
                         if verbose {
-                            println!("  Stored \"{}\" in var {}", val, name);
+                            println!("  Stored {:?} in var {}", val, name);
                         }
                         vars.insert(name.clone(), val);
                     }
@@ -135,52 +185,102 @@ impl Vm {
                 Instruction::Add => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
-                    let res = a.parse::<f64>().unwrap() + b.parse::<f64>().unwrap();
-                    stack.push(res.to_string());
-                    if verbose {
-                        println!("  Add: {} + {} = {}", a, b, res);
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        let res = x + y;
+                        stack.push(Value::Number(res));
+                        if verbose {
+                            println!("  Add: {} + {} = {}", x, y, res);
+                        }
                     }
                 }
                 Instruction::Sub => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
-                    let res = a.parse::<f64>().unwrap() - b.parse::<f64>().unwrap();
-                    stack.push(res.to_string());
-                    if verbose {
-                        println!("  Sub: {} - {} = {}", a, b, res);
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        let res = x - y;
+                        stack.push(Value::Number(res));
+                        if verbose {
+                            println!("  Sub: {} - {} = {}", x, y, res);
+                        }
                     }
                 }
                 Instruction::Mul => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
-                    let res = a.parse::<f64>().unwrap() * b.parse::<f64>().unwrap();
-                    stack.push(res.to_string());
-                    if verbose {
-                        println!("  Mul: {} * {} = {}", a, b, res);
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        let res = x * y;
+                        stack.push(Value::Number(res));
+                        if verbose {
+                            println!("  Mul: {} * {} = {}", x, y, res);
+                        }
                     }
                 }
                 Instruction::Div => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
-                    let res = a.parse::<f64>().unwrap() / b.parse::<f64>().unwrap();
-                    stack.push(res.to_string());
-                    if verbose {
-                        println!("  Div: {} / {} = {}", a, b, res);
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        let res = x / y;
+                        stack.push(Value::Number(res));
+                        if verbose {
+                            println!("  Div: {} / {} = {}", x, y, res);
+                        }
                     }
                 }
                 Instruction::Concat => {
                     let b = stack.pop().unwrap();
                     let a = stack.pop().unwrap();
                     let result = format!("{}{}", a, b);
-                    stack.push(result.clone());
+                    stack.push(Value::String(result.clone()));
                     if verbose {
                         println!("  Concat: \"{}\" .. \"{}\" = \"{}\"", a, b, result);
+                    }
+                }
+                Instruction::MakeTable(size) => {
+                    let mut elements = Vec::new();
+                    for _ in 0..*size {
+                        if let Some(val) = stack.pop() {
+                            elements.push(val);
+                        }
+                    }
+                    elements.reverse();
+                    stack.push(Value::Table(elements));
+                    if verbose {
+                        println!("  Created table with {} elements", size);
+                    }
+                }
+                Instruction::GetIndex => {
+                    let index = stack.pop().unwrap();
+                    let table = stack.pop().unwrap();
+                    
+                    if let (Value::Table(elems), Value::Number(idx)) = (table, index) {
+                        let i = idx as usize;
+                        if i < elems.len() {
+                            stack.push(elems[i].clone());
+                            if verbose {
+                                println!("  Got element at index {}", i);
+                            }
+                        } else {
+                            stack.push(Value::Nil);
+                            if verbose {
+                                println!("  Index {} out of bounds", i);
+                            }
+                        }
+                    }
+                }
+                Instruction::LoadModule(name) => {
+                    if let Some(module) = stdlib.get(name) {
+                        vars.insert(name.clone(), module.clone());
+                        if verbose {
+                            println!("  Loaded module {}", name);
+                        }
+                    } else {
+                        eprintln!("Module '{}' not found", name);
                     }
                 }
                 Instruction::Print => {
                     if let Some(val) = stack.pop() {
                         if verbose {
-                            println!("  Print: \"{}\"", val);
+                            println!("  Print: {:?}", val);
                             println!(">> {}", val);
                         } else {
                             println!("{}", val);

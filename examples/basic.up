@@ -15,6 +15,6 @@ name = "World"
 greeting = "Hello, " .. name
 print(greeting)
 
--- Simple arithmetic expression
+-- Simple arithmetic expression (note: no operator precedence yet)
 result = x + y * 2
 print("Result: " .. result)
