@@ -941,6 +941,42 @@ impl Vm {
                     }
                     pc += 1;
                 }
+                Instruction::Call(func_name, arg_count) => {
+                    // Handle function calls within functions (including recursion)
+                    if let Some(Value::Function(params, body)) = vars.get(func_name).cloned() {
+                        if params.len() != *arg_count {
+                            eprintln!("Error: Function {} expects {} arguments, got {}", func_name, params.len(), arg_count);
+                            pc += 1;
+                            continue;
+                        }
+                        
+                        // Pop arguments from stack
+                        let mut args = Vec::new();
+                        for _ in 0..*arg_count {
+                            if let Some(arg) = stack.pop() {
+                                args.push(arg);
+                            }
+                        }
+                        args.reverse();
+                        
+                        // Create local scope with parameters bound to arguments
+                        let mut func_vars = vars.clone();
+                        for (i, param_name) in params.iter().enumerate() {
+                            if i < args.len() {
+                                func_vars.insert(param_name.clone(), args[i].clone());
+                            }
+                        }
+                        
+                        // Execute function recursively
+                        Self::execute_function(&body, stack, &mut func_vars, verbose);
+                        
+                        // Return value is left on stack by the function
+                    } else {
+                        eprintln!("Error: Function {} not found in function context", func_name);
+                        stack.push(Value::Nil);
+                    }
+                    pc += 1;
+                }
                 Instruction::Return => {
                     // Return from function - the value on top of stack is the return value
                     if verbose {
