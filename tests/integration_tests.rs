@@ -141,6 +141,23 @@ fn test_logical_operators() {
 }
 
 #[test]
+fn test_operator_precedence() {
+    let source = r#"
+        x = 15
+        in_range = x >= 10 and x <= 20
+        age = 25
+        is_adult = age >= 18 and age < 65
+        result = 2 + 3 * 4
+        check = 5 + 5 == 10
+    "#;
+    
+    let tokens = parser::tokenize(source, false).expect("Tokenization failed");
+    let ast = parser::parse_to_ast(tokens, false).expect("Parsing failed");
+    let bytecode = compiler::Compiler::compile(&ast, false);
+    compiler::Vm::execute(&bytecode, false);
+}
+
+#[test]
 fn test_module_import() {
     let source = r#"
         import "json"

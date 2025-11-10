@@ -4,23 +4,7 @@ This document tracks known limitations and planned improvements for Pickup-Lang.
 
 ## Current Limitations
 
-### 1. Operator Precedence in Complex Expressions
-**Issue:** Complex expressions mixing comparison and logical operators may not evaluate correctly. For example, `x >= 10 and x <= 20` may give incorrect results.
-
-**Workaround:** Break complex expressions into separate statements:
-```pickup
-# Instead of:
-in_range = x >= 10 and x <= 20
-
-# Use:
-check1 = x >= 10
-check2 = x <= 20
-in_range = check1 and check2
-```
-
-**Status:** Parser needs proper operator precedence handling.
-
-### 2. REPL Multi-line Support
+### 1. REPL Multi-line Support
 **Issue:** The REPL currently processes input line-by-line, which means multi-line constructs like if-statements and loops cannot be entered interactively.
 
 **Workaround:** Use file-based execution for multi-line code.

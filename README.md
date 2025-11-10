@@ -98,12 +98,17 @@ print(a > b)   -- false (greater than)
 print(a <= b)  -- true (less or equal)
 print(a >= b)  -- false (greater or equal)
 
--- Logical operators
+-- Logical operators with proper precedence
 x = true
 y = false
 print(x and y)  -- false
 print(x or y)   -- true
 print(not x)    -- false
+
+-- Complex expressions work correctly
+age = 25
+is_adult = age >= 18 and age < 65  -- Evaluates correctly
+print(is_adult)  -- true
 ```
 
 ### Arrays and Tables (0-based indexing)

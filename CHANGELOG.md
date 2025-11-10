@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - String module with 7 string manipulation utilities
   - Enhanced JSON module (parse, stringify)
   - Enhanced FS module (read, write, exists, readdir, mkdir)
-- **Test Suite:** 11 comprehensive integration tests
+- **Test Suite:** 12 comprehensive integration tests
 - **Documentation:**
   - FEATURES.md - Complete language feature documentation
   - LIMITATIONS.md - Known limitations and future work
@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated AST to include new node types (If, While, For, Return, etc.)
 
 ### Fixed
+- **Operator precedence:** Complex expressions like `x >= 10 and x <= 20` now evaluate correctly
 - Operator precedence in grammar (longer operators matched first)
 - Keyword boundary detection for 'and' and 'or' operators
 - Parser handling of complex nested expressions

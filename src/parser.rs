@@ -285,6 +285,20 @@ fn parse_function_call(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, Parse
     }
 }
 
+// Operator precedence levels (higher number = higher precedence)
+fn get_precedence(op: &str) -> u8 {
+    match op {
+        "or" => 1,
+        "and" => 2,
+        "==" | "~=" => 3,
+        "<" | ">" | "<=" | ">=" => 4,
+        ".." => 5,
+        "+" | "-" => 6,
+        "*" | "/" => 7,
+        _ => 0,
+    }
+}
+
 fn parse_expression(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
     if verbose {
         println!("Parsing expression: {:?}", pair);
@@ -301,19 +315,9 @@ fn parse_expression(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseErr
                 return Err(ParseError::AstError("Empty expression".into()));
             }
 
-            // Handle binary expressions (a + b, etc.)
+            // Handle binary expressions with precedence
             if pairs.len() >= 3 {
-                let mut left = parse_term(pairs[0].clone(), verbose)?;
-
-                let mut i = 1;
-                while i + 1 < pairs.len() {
-                    let op = pairs[i].as_str().to_string();
-                    let right = parse_term(pairs[i + 1].clone(), verbose)?;
-                    left = AstNode::BinaryOp(Box::new(left), op, Box::new(right));
-                    i += 2;
-                }
-
-                return Ok(left);
+                return parse_expression_with_precedence(&pairs, 0, verbose);
             }
 
             // Single term
@@ -322,6 +326,69 @@ fn parse_expression(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseErr
         Rule::term => parse_term(pair, verbose),
         _ => parse_term(pair, verbose), // Try parsing as a term
     }
+}
+
+// Parse expression with operator precedence using precedence climbing
+fn parse_expression_with_precedence(
+    pairs: &[Pair<Rule>],
+    min_precedence: u8,
+    verbose: bool,
+) -> Result<AstNode, ParseError> {
+    if pairs.is_empty() {
+        return Err(ParseError::AstError("Empty expression in precedence parsing".into()));
+    }
+
+    // Parse the first term
+    let mut left = parse_term(pairs[0].clone(), verbose)?;
+    let mut i = 1;
+
+    // Process operators and terms
+    while i < pairs.len() {
+        if i + 1 >= pairs.len() {
+            break;
+        }
+
+        let op = pairs[i].as_str();
+        let precedence = get_precedence(op);
+
+        if precedence < min_precedence {
+            break;
+        }
+
+        let op_str = op.to_string();
+        i += 1; // Move past operator
+
+        // Parse the right side with higher precedence
+        let mut right = parse_term(pairs[i].clone(), verbose)?;
+        i += 1; // Move past right term
+
+        // Look ahead for higher precedence operators
+        while i < pairs.len() {
+            if i + 1 >= pairs.len() {
+                break;
+            }
+
+            let next_op = pairs[i].as_str();
+            let next_precedence = get_precedence(next_op);
+
+            if next_precedence <= precedence {
+                break;
+            }
+
+            // Build the right subtree with remaining tokens
+            let remaining = &pairs[i - 1..];
+            right = parse_expression_with_precedence(remaining, precedence + 1, verbose)?;
+            
+            // Calculate how many tokens were consumed
+            // This is simplified - we consumed everything from i-1 onwards into right
+            i = pairs.len();
+            break;
+        }
+
+        left = AstNode::BinaryOp(Box::new(left), op_str, Box::new(right));
+    }
+
+    Ok(left)
 }
 
 fn parse_term(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {

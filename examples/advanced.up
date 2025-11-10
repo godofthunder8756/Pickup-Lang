@@ -86,9 +86,7 @@ end
 print("")
 print("5. Boolean Logic:")
 x = 15
-check1 = x >= 10
-check2 = x <= 20
-in_range = check1 and check2
+in_range = x >= 10 and x <= 20
 print("15 is between 10 and 20: " .. in_range)
 
 has_error = false
@@ -137,15 +135,10 @@ print("9. Comparison Tests:")
 age = 25
 if age < 18 then
     print("Minor")
+elseif age >= 18 and age < 65 then
+    print("Adult")
 else
-    check_adult = age >= 18
-    check_senior = age < 65
-    is_adult = check_adult and check_senior
-    if is_adult then
-        print("Adult")
-    else
-        print("Senior")
-    end
+    print("Senior")
 end
 
 -- 10. Module imports
