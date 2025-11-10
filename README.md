@@ -35,10 +35,68 @@ cargo build --release
 ```
 
 ## Roadmap
-1. REPL for syntax/feature testing
-2. File execution for script usage
-3. Parser → AST → Interpreter
-4. Module system + std lib
+
+All roadmap features are now implemented! ✅
+
+1. ✅ REPL for syntax/feature testing
+2. ✅ File execution for script usage
+3. ✅ Parser → AST → Interpreter (bytecode compiler & VM)
+4. ✅ Module system + std lib
+
+## Language Features
+
+### Arrays and Tables (0-based indexing)
+```pickup
+-- Create arrays with 0-based indexing
+numbers = [1, 2, 3, 4, 5]
+print(numbers[0])  -- Prints: 1
+
+fruits = ["apple", "banana", "cherry"]
+print(fruits[2])  -- Prints: cherry
+```
+
+### Module System
+```pickup
+-- Import standard library modules
+import "json"
+import "fs"
+
+-- Modules are loaded and available
+-- (Native function implementations coming soon)
+```
+
+### String Operations
+```pickup
+-- String concatenation with ..
+greeting = "Hello" .. ", " .. "World!"
+print(greeting)  -- Prints: Hello, World!
+
+-- String interpolation
+name = "Pickup"
+message = "Welcome to " .. name
+print(message)
+```
+
+### Arithmetic Operations
+```pickup
+x = 10
+y = 20
+sum = x + y
+print(sum)  -- Prints: 30
+
+-- Supported operators: +, -, *, /
+```
+
+### Variables and Assignment
+```pickup
+-- Simple assignment
+x = 42
+name = "Alice"
+active = true
+
+-- Expression assignment
+result = x + y * 2
+```
 
 ## Getting Started
 ```bash

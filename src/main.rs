@@ -3,6 +3,7 @@ mod cli;
 mod compiler;
 mod parser;
 mod repl;
+mod stdlib;
 
 fn main() {
     let args = cli::parse_args();

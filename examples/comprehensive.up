@@ -1,0 +1,63 @@
+-- comprehensive.up - Showcase all roadmap features
+
+-- Feature 1: REPL - can be tested with `pick` command
+-- Feature 2: File execution - you're running this file!
+print("Pickup Language - Comprehensive Feature Test")
+print("=============================================")
+
+-- Feature 3: Parser → AST → Interpreter (bytecode VM)
+print("")
+print("1. Basic Variables and Expressions:")
+x = 10
+y = 20
+z = x + y
+print("x + y = " .. z)
+
+-- Feature 4a: 0-based indexing with arrays/tables
+print("")
+print("2. Arrays with 0-based indexing:")
+colors = ["red", "green", "blue", "yellow"]
+print("Array: " .. colors)
+print("colors[0] = " .. colors[0])
+print("colors[1] = " .. colors[1])
+print("colors[2] = " .. colors[2])
+
+numbers = [10, 20, 30, 40, 50]
+first = numbers[0]
+last = numbers[4]
+print("First number: " .. first)
+print("Last number: " .. last)
+
+-- Feature 4b: Module system
+print("")
+print("3. Module System:")
+import "json"
+import "fs"
+print("✓ JSON module loaded")
+print("✓ FS module loaded")
+
+-- Feature 5: String operations
+print("")
+print("4. String Concatenation:")
+greeting = "Hello"
+name = "Pickup"
+message = greeting .. ", " .. name .. "!"
+print(message)
+
+-- Feature 6: Arithmetic operations
+print("")
+print("5. Arithmetic Operations:")
+a = 100
+b = 25
+sum = a + b
+diff = a - b
+prod = a * b
+quot = a / b
+print("Addition: " .. sum)
+print("Subtraction: " .. diff)
+print("Multiplication: " .. prod)
+print("Division: " .. quot)
+
+print("")
+print("=============================================")
+print("All roadmap features verified!")

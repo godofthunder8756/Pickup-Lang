@@ -19,4 +19,10 @@ pub enum AstNode {
     FunctionCall(String, Vec<AstNode>),
     /// Print statement
     Print(Box<AstNode>),
+    /// Table/Array literal [element1, element2, ...]
+    Table(Vec<AstNode>),
+    /// Table/Array index access (table, index)
+    Index(Box<AstNode>, Box<AstNode>),
+    /// Import statement (module path)
+    Import(String),
 }

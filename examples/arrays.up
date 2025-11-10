@@ -1,0 +1,17 @@
+-- arrays.up - Test file for array/table support
+
+-- Create an array (0-based indexing)
+numbers = [1, 2, 3, 4, 5]
+print(numbers)
+
+-- Access array elements
+first = numbers[0]
+print("First element: " .. first)
+
+second = numbers[1]
+print("Second element: " .. second)
+
+-- Array with strings
+fruits = ["apple", "banana", "cherry"]
+print(fruits)
+print("First fruit: " .. fruits[0])
