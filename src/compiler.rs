@@ -94,29 +94,29 @@ impl Vm {
         use std::collections::HashMap;
         let mut stack: Vec<String> = Vec::new();
         let mut vars: HashMap<String, String> = HashMap::new();
-        
+
         if verbose {
             println!("\n--- VM Execution Log ---");
         }
-        
+
         for (i, inst) in code.iter().enumerate() {
             if verbose {
                 println!("Instruction {}: {:?}", i, inst);
             }
-            
+
             match inst {
                 Instruction::PushNumber(n) => {
                     stack.push(n.to_string());
                     if verbose {
                         println!("  Pushed number {}", n);
                     }
-                },
+                }
                 Instruction::PushString(s) => {
                     stack.push(s.clone());
                     if verbose {
                         println!("  Pushed string \"{}\"", s);
                     }
-                },
+                }
                 Instruction::LoadVar(name) => {
                     let val = vars.get(name).cloned().unwrap_or_default();
                     stack.push(val.clone());
@@ -188,14 +188,14 @@ impl Vm {
                     }
                 }
             }
-            
+
             if verbose {
                 println!("  Stack: {:?}", stack);
                 println!("  Vars: {:?}", vars);
                 println!("");
             }
         }
-        
+
         if verbose {
             println!("--- VM Execution Completed ---\n");
         }

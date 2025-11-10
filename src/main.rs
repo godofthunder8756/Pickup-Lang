@@ -1,13 +1,13 @@
-mod cli;
-mod repl;
-mod parser;
 mod ast;
+mod cli;
 mod compiler;
+mod parser;
+mod repl;
 
 fn main() {
     let args = cli::parse_args();
     let verbose = args.verbose_output;
-    
+
     if let Some(path) = args.script {
         // File execution path
         let source = std::fs::read_to_string(path).expect("Failed to read script");
