@@ -7,6 +7,33 @@ Pickup is a lightweight scripting language inspired by Lua, designed as a modern
 - Improved error handling & stack traces
 - Clean ES-style module system
 
+## Installation
+
+### Download Pre-built Binaries
+
+Download the latest release for your platform from the [Releases page](https://github.com/godofthunder8756/Pickup-Lang/releases).
+
+**Linux/macOS:**
+```bash
+# Download the appropriate binary for your platform
+chmod +x pick-*
+sudo mv pick-* /usr/local/bin/pick
+```
+
+**Windows:**
+Download the `.exe` file and add it to your PATH.
+
+### Build from Source
+
+```bash
+# Clone and build
+git clone https://github.com/godofthunder8756/Pickup-Lang.git
+cd Pickup-Lang
+cargo build --release
+
+# The binary will be at target/release/pick
+```
+
 ## Roadmap
 1. REPL for syntax/feature testing
 2. File execution for script usage
@@ -15,39 +42,32 @@ Pickup is a lightweight scripting language inspired by Lua, designed as a modern
 
 ## Getting Started
 ```bash
-# Clone and run (starts REPL)
-git clone https://github.com/yourusername/pickup-lang.git
-cd pickup-lang
+# Start the REPL
+pick
+
+# Execute a file
+pick path/to/script.pickup
+```
+
+## Development
+
+### Building
+```bash
+cargo build
+```
+
+### Running Tests
+```bash
+cargo test
+```
+
+### Running from Source
+```bash
+# Start REPL
 cargo run
 
 # Execute a file
 cargo run -- path/to/script.pickup
-
----
-
-## Cargo.toml
-```toml
-[package]
-name = "pickup-lang"
-version = "0.1.0"
-edition = "2021"
-authors = ["Your Name <you@example.com>"]
-description = "Pickup: A modern Lua-inspired scripting language"
-license = "MIT"
-
-[dependencies]
-# CLI parsing
-clap = { version = "4.1", features = ["derive"] }
-# Parsing
-pest = "2.4"
-pest_derive = "2.4"
-# REPL
-rustyline = "11.0"
-# Error handling
-thiserror = "1.0"
-# JSON support
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 ```
 
 ## Bytecode Compiler
@@ -55,3 +75,23 @@ serde_json = "1.0"
 The compiler transforms parsed AST nodes into a simple bytecode which is then
 executed by a tiny virtual machine. Running `cargo run` will start the REPL
 using this compiler.
+
+## Releases
+
+This project uses automated releases via GitHub Actions. To create a new release:
+
+1. Update the version in `Cargo.toml`
+2. Commit the change: `git commit -am "Bump version to X.Y.Z"`
+3. Create and push a tag: `git tag vX.Y.Z && git push origin vX.Y.Z`
+4. GitHub Actions will automatically build binaries for all platforms and create a release
+
+The release pipeline builds binaries for:
+- Linux (x86_64, both glibc and musl)
+- macOS (x86_64 Intel and aarch64 Apple Silicon)
+- Windows (x86_64)
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment:
+- **CI Pipeline**: Runs on every push and pull request, building and testing on Linux, macOS, and Windows
+- **Release Pipeline**: Automatically creates releases with pre-built binaries when version tags are pushed
