@@ -916,6 +916,31 @@ impl Vm {
                     }
                     pc += 1;
                 }
+                Instruction::MakeTable(size) => {
+                    let mut elements = Vec::new();
+                    for _ in 0..*size {
+                        if let Some(val) = stack.pop() {
+                            elements.push(val);
+                        }
+                    }
+                    elements.reverse();
+                    stack.push(Value::Table(elements));
+                    pc += 1;
+                }
+                Instruction::GetIndex => {
+                    let index = stack.pop().unwrap();
+                    let table = stack.pop().unwrap();
+                    
+                    if let (Value::Table(elems), Value::Number(idx)) = (table, index) {
+                        let i = idx as usize;
+                        if i < elems.len() {
+                            stack.push(elems[i].clone());
+                        } else {
+                            stack.push(Value::Nil);
+                        }
+                    }
+                    pc += 1;
+                }
                 Instruction::Return => {
                     // Return from function - the value on top of stack is the return value
                     if verbose {
