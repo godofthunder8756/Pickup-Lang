@@ -1,0 +1,81 @@
+-- functions.up - Demonstrate function support
+
+print("=== Function Examples ===")
+print("")
+
+-- 1. Simple function
+print("1. Simple Addition Function:")
+function add(a, b)
+    return a + b
+end
+
+result = add(10, 20)
+print("add(10, 20) = " .. result)
+
+-- 2. Function with string operations
+print("")
+print("2. String Function:")
+function greet(name)
+    return "Hello, " .. name .. "!"
+end
+
+greeting = greet("Pickup")
+print(greeting)
+
+-- 3. Function with conditionals
+print("")
+print("3. Function with Conditionals:")
+function max(a, b)
+    if a > b then
+        return a
+    else
+        return b
+    end
+end
+
+larger = max(15, 23)
+print("max(15, 23) = " .. larger)
+
+-- 4. Function with loops
+print("")
+print("4. Function with Loop (factorial):")
+function factorial(n)
+    result = 1
+    for i = 1, n do
+        result = result * i
+    end
+    return result
+end
+
+fact5 = factorial(5)
+print("factorial(5) = " .. fact5)
+
+-- 5. Multiple function calls
+print("")
+print("5. Chaining Function Calls:")
+function double(x)
+    return x * 2
+end
+
+function triple(x)
+    return x * 3
+end
+
+val = 5
+doubled = double(val)
+tripled = triple(val)
+print("double(5) = " .. doubled)
+print("triple(5) = " .. tripled)
+
+-- 6. Function without explicit return
+print("")
+print("6. Function Without Return (prints directly):")
+function print_line(msg)
+    print(">>> " .. msg)
+end
+
+print_line("This is a message")
+print_line("Functions work!")
+
+print("")
+print("=== All Function Tests Complete ===")

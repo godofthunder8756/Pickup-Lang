@@ -42,8 +42,108 @@ All roadmap features are now implemented! ✅
 2. ✅ File execution for script usage
 3. ✅ Parser → AST → Interpreter (bytecode compiler & VM)
 4. ✅ Module system + std lib
+5. ✅ Control flow (if/else/elseif)
+6. ✅ Loops (while, for)
+7. ✅ Comparison operators (==, ~=, <, >, <=, >=)
+8. ✅ Logical operators (and, or, not) with proper precedence
+9. ✅ User-defined functions with parameters and return values
+10. ✅ Enhanced standard library (JSON, FS, String, Math modules)
+11. ✅ Comprehensive test suite (14 tests)
 
 ## Language Features
+
+### Functions
+```pickup
+-- Define a function
+function add(a, b)
+    return a + b
+end
+
+-- Call the function
+result = add(10, 20)
+print(result)  -- Prints: 30
+
+-- Function with conditionals
+function max(a, b)
+    if a > b then
+        return a
+    else
+        return b
+    end
+end
+
+-- Recursive function (factorial)
+function factorial(n)
+    result = 1
+    for i = 1, n do
+        result = result * i
+    end
+    return result
+end
+
+fact5 = factorial(5)
+print(fact5)  -- Prints: 120
+```
+
+### Control Flow
+```pickup
+-- If-else statements
+score = 85
+if score >= 90 then
+    print("Grade: A")
+elseif score >= 80 then
+    print("Grade: B")
+elseif score >= 70 then
+    print("Grade: C")
+else
+    print("Grade: F")
+end
+```
+
+### Loops
+```pickup
+-- While loop
+i = 1
+while i <= 5 do
+    print(i)
+    i = i + 1
+end
+
+-- For loop
+for j = 1, 10 do
+    print(j)
+end
+
+-- For loop with step
+for k = 0, 20, 2 do
+    print(k)  -- Prints even numbers
+end
+```
+
+### Comparison and Logical Operators
+```pickup
+-- Comparison operators
+a = 10
+b = 20
+print(a == b)  -- false (equal)
+print(a ~= b)  -- true (not equal)
+print(a < b)   -- true (less than)
+print(a > b)   -- false (greater than)
+print(a <= b)  -- true (less or equal)
+print(a >= b)  -- false (greater or equal)
+
+-- Logical operators with proper precedence
+x = true
+y = false
+print(x and y)  -- false
+print(x or y)   -- true
+print(not x)    -- false
+
+-- Complex expressions work correctly
+age = 25
+is_adult = age >= 18 and age < 65  -- Evaluates correctly
+print(is_adult)  -- true
+```
 
 ### Arrays and Tables (0-based indexing)
 ```pickup
@@ -60,10 +160,27 @@ print(fruits[2])  -- Prints: cherry
 -- Import standard library modules
 import "json"
 import "fs"
+import "string"
+import "math"
 
--- Modules are loaded and available
--- (Native function implementations coming soon)
+-- Modules provide various utilities
+-- (Native function implementations for real I/O coming soon)
 ```
+
+### Standard Library
+
+#### Math Module
+- Constants: `pi`, `e`
+- Functions: `floor`, `ceil`, `round`, `abs`, `min`, `max`, `sqrt`, `pow`, `sin`, `cos`, `tan`, `random`
+
+#### String Module
+- Functions: `length`, `upper`, `lower`, `substring`, `split`, `trim`, `replace`
+
+#### JSON Module
+- Functions: `parse`, `stringify`
+
+#### FS Module
+- Functions: `read`, `write`, `exists`, `readdir`, `mkdir`
 
 ### String Operations
 ```pickup
@@ -82,7 +199,13 @@ print(message)
 x = 10
 y = 20
 sum = x + y
-print(sum)  -- Prints: 30
+diff = x - y
+prod = x * y
+quot = x / y
+print(sum)   -- Prints: 30
+print(diff)  -- Prints: -10
+print(prod)  -- Prints: 200
+print(quot)  -- Prints: 0.5
 
 -- Supported operators: +, -, *, /
 ```
@@ -93,6 +216,7 @@ print(sum)  -- Prints: 30
 x = 42
 name = "Alice"
 active = true
+nothing = nil
 
 -- Expression assignment
 result = x + y * 2

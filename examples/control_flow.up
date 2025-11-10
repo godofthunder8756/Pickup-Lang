@@ -1,0 +1,95 @@
+-- control_flow.up - Test control flow features
+
+print("=== Control Flow Tests ===")
+print("")
+
+-- Test 1: If-else statements
+print("1. If-Else Tests:")
+x = 10
+if x > 5 then
+    print("x is greater than 5")
+end
+
+if x < 5 then
+    print("x is less than 5")
+else
+    print("x is not less than 5")
+end
+
+-- Test 2: If-elseif-else
+score = 85
+if score >= 90 then
+    print("Grade: A")
+elseif score >= 80 then
+    print("Grade: B")
+elseif score >= 70 then
+    print("Grade: C")
+else
+    print("Grade: F")
+end
+
+-- Test 3: Comparison operators
+print("")
+print("2. Comparison Tests:")
+a = 10
+b = 20
+eq = a == b
+print("a == b: " .. eq)
+neq = a ~= b
+print("a ~= b: " .. neq)
+lt = a < b
+print("a < b: " .. lt)
+gt = a > b
+print("a > b: " .. gt)
+le = a <= b
+print("a <= b: " .. le)
+ge = a >= b
+print("a >= b: " .. ge)
+
+-- Test 4: While loop
+print("")
+print("3. While Loop:")
+i = 1
+while i <= 5 do
+    print("Iteration: " .. i)
+    i = i + 1
+end
+
+-- Test 5: For loop
+print("")
+print("4. For Loop:")
+for j = 1, 5 do
+    print("Count: " .. j)
+end
+
+-- Test 6: For loop with step
+print("")
+print("5. For Loop with Step:")
+for k = 0, 10, 2 do
+    print("Even: " .. k)
+end
+
+-- Test 7: Logical operators
+print("")
+print("6. Logical Operators:")
+t = true
+f = false
+ta = t and t
+print("true and true: " .. ta)
+tf = t and f
+print("true and false: " .. tf)
+to = t or f
+print("true or false: " .. to)
+nt = not t
+print("not true: " .. nt)
+nf = not f
+print("not false: " .. nf)
+
+-- Test 8: nil values
+print("")
+print("7. Nil Values:")
+nothing = nil
+print("nil value: " .. nothing)
+
+print("")
+print("=== All Tests Complete ===")

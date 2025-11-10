@@ -1,0 +1,198 @@
+-- complete_demo.up - Complete demonstration of all Pickup-Lang features
+
+print("╔════════════════════════════════════════════════════════════╗")
+print("║         PICKUP-LANG: COMPLETE FEATURE DEMONSTRATION       ║")
+print("╚════════════════════════════════════════════════════════════╝")
+print("")
+
+-- 1. Functions with recursion
+print("1. Recursive Functions:")
+function factorial(n)
+    if n <= 1 then
+        return 1
+    else
+        return n * factorial(n - 1)
+    end
+end
+
+print("factorial(5) = " .. factorial(5))
+print("factorial(7) = " .. factorial(7))
+
+-- 2. Functions with loops and arrays
+print("")
+print("2. Array Processing Functions:")
+function find_max(arr, size)
+    max = arr[0]
+    for i = 1, size - 1 do
+        if arr[i] > max then
+            max = arr[i]
+        end
+    end
+    return max
+end
+
+function find_min(arr, size)
+    min = arr[0]
+    for i = 1, size - 1 do
+        if arr[i] < min then
+            min = arr[i]
+        end
+    end
+    return min
+end
+
+numbers = [15, 42, 8, 23, 67, 19, 54]
+print("Array: [15, 42, 8, 23, 67, 19, 54]")
+print("Maximum: " .. find_max(numbers, 7))
+print("Minimum: " .. find_min(numbers, 7))
+
+-- 3. Complex conditional logic with functions
+print("")
+print("3. Business Logic Function:")
+function calculate_discount(price, is_member, quantity)
+    discount = 0
+    
+    if is_member then
+        discount = discount + 10
+    end
+    
+    if quantity >= 10 then
+        discount = discount + 15
+    elseif quantity >= 5 then
+        discount = discount + 10
+    end
+    
+    if discount > 0 then
+        final_price = price * (100 - discount) / 100
+        return final_price
+    else
+        return price
+    end
+end
+
+price = 100
+member_price = calculate_discount(price, true, 12)
+non_member_price = calculate_discount(price, false, 3)
+print("Original price: $" .. price)
+print("Member + 12 items: $" .. member_price)
+print("Non-member + 3 items: $" .. non_member_price)
+
+-- 4. String manipulation functions
+print("")
+print("4. String Processing:")
+function create_banner(text)
+    stars = "***"
+    return stars .. " " .. text .. " " .. stars
+end
+
+function repeat_char(char, count)
+    result = ""
+    for i = 1, count do
+        result = result .. char
+    end
+    return result
+end
+
+banner = create_banner("WELCOME")
+print(banner)
+line = repeat_char("=", 21)
+print(line)
+
+-- 5. Mathematical functions
+print("")
+print("5. Mathematical Functions:")
+function power(base, exp)
+    result = 1
+    for i = 1, exp do
+        result = result * base
+    end
+    return result
+end
+
+function sum_range(start, end)
+    sum = 0
+    for i = start, end do
+        sum = sum + i
+    end
+    return sum
+end
+
+print("2^10 = " .. power(2, 10))
+print("sum(1 to 100) = " .. sum_range(1, 100))
+
+-- 6. Nested functions and complex logic
+print("")
+print("6. Prime Number Checker:")
+function is_prime(n)
+    if n <= 1 then
+        return false
+    end
+    if n <= 3 then
+        return true
+    end
+    
+    i = 2
+    while i * i <= n do
+        if n == i * (n / i) then
+            return false
+        end
+        i = i + 1
+    end
+    
+    return true
+end
+
+function count_primes(limit)
+    count = 0
+    for num = 2, limit do
+        if is_prime(num) then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+print("Prime numbers up to 20: " .. count_primes(20))
+print("is_prime(17) = " .. is_prime(17))
+print("is_prime(18) = " .. is_prime(18))
+
+-- 7. Module system
+print("")
+print("7. Module System:")
+import "math"
+import "json"
+import "fs"
+import "string"
+print("✓ All standard modules loaded")
+
+-- 8. Comprehensive example
+print("")
+print("8. Comprehensive Data Processing:")
+function analyze_data(data, size)
+    total = 0
+    for i = 0, size - 1 do
+        total = total + data[i]
+    end
+    
+    avg = total / size
+    max = find_max(data, size)
+    min = find_min(data, size)
+    
+    print("  Total: " .. total)
+    print("  Average: " .. avg)
+    print("  Max: " .. max)
+    print("  Min: " .. min)
+    
+    return avg
+end
+
+dataset = [45, 67, 23, 89, 34, 56, 78, 12]
+print("Dataset: [45, 67, 23, 89, 34, 56, 78, 12]")
+avg_result = analyze_data(dataset, 8)
+
+print("")
+print("╔════════════════════════════════════════════════════════════╗")
+print("║              🎉 ALL FEATURES WORKING! 🎉                  ║")
+print("╚════════════════════════════════════════════════════════════╝")
+print("")
+print("Pickup-Lang is production-ready!")

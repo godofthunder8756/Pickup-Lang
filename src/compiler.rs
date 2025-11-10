@@ -2,11 +2,12 @@ use crate::ast::AstNode;
 use std::collections::HashMap;
 
 /// Bytecode instructions for the Pickup VM.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Instruction {
     PushNumber(f64),
     PushString(String),
     PushBoolean(bool),
+    PushNil,
     LoadVar(String),
     StoreVar(String),
     Add,
@@ -14,10 +15,27 @@ pub enum Instruction {
     Mul,
     Div,
     Concat,
+    Equal,
+    NotEqual,
+    LessThan,
+    GreaterThan,
+    LessEqual,
+    GreaterEqual,
+    And,
+    Or,
+    Not,
     Print,
     MakeTable(usize),  // Create a table with n elements from stack
     GetIndex,          // Get value at index from table
     LoadModule(String), // Load standard library module
+    Jump(usize),       // Unconditional jump to instruction index
+    JumpIfFalse(usize), // Jump to instruction index if top of stack is false
+    Call(String, usize),       // Call function (name, arg_count)
+    Return,            // Return from function
+    DefineFunction(String, Vec<String>, usize), // Define function (name, params, body_len)
+    Pop,               // Pop value from stack
+    Break,             // Break from loop
+    Continue,          // Continue loop
 }
 
 /// Compile an AST to bytecode instructions.
@@ -43,6 +61,7 @@ impl Compiler {
             AstNode::Number(n) => code.push(Instruction::PushNumber(*n)),
             AstNode::String(s) => code.push(Instruction::PushString(s.clone())),
             AstNode::Boolean(b) => code.push(Instruction::PushBoolean(*b)),
+            AstNode::Nil => code.push(Instruction::PushNil),
             AstNode::Identifier(id) => code.push(Instruction::LoadVar(id.clone())),
             AstNode::Assignment(var, expr) => {
                 // var is Identifier
@@ -60,8 +79,20 @@ impl Compiler {
                     "*" => code.push(Instruction::Mul),
                     "/" => code.push(Instruction::Div),
                     ".." => code.push(Instruction::Concat),
+                    "==" => code.push(Instruction::Equal),
+                    "~=" => code.push(Instruction::NotEqual),
+                    "<" => code.push(Instruction::LessThan),
+                    ">" => code.push(Instruction::GreaterThan),
+                    "<=" => code.push(Instruction::LessEqual),
+                    ">=" => code.push(Instruction::GreaterEqual),
+                    "and" => code.push(Instruction::And),
+                    "or" => code.push(Instruction::Or),
                     _ => {}
                 }
+            }
+            AstNode::Not(expr) => {
+                Self::compile_node(expr, code);
+                code.push(Instruction::Not);
             }
             AstNode::Print(expr) => {
                 Self::compile_node(expr, code);
@@ -81,18 +112,162 @@ impl Compiler {
             AstNode::Import(module) => {
                 code.push(Instruction::LoadModule(module.clone()));
             }
-            _ => {}
+            AstNode::If(condition, then_block, elseif_clauses, else_block) => {
+                // Compile condition
+                Self::compile_node(condition, code);
+                
+                // Reserve space for JumpIfFalse (will patch later)
+                let jump_to_next = code.len();
+                code.push(Instruction::JumpIfFalse(0));
+                
+                // Compile then block
+                for stmt in then_block {
+                    Self::compile_node(stmt, code);
+                }
+                
+                // Reserve space for Jump to end (skip else blocks)
+                let jump_to_end = code.len();
+                code.push(Instruction::Jump(0));
+                
+                // Patch the JumpIfFalse to jump here (start of elseif/else)
+                let next_block_start = code.len();
+                code[jump_to_next] = Instruction::JumpIfFalse(next_block_start);
+                
+                let mut jumps_to_end = vec![jump_to_end];
+                
+                // Compile elseif clauses
+                for (elseif_cond, elseif_block) in elseif_clauses {
+                    Self::compile_node(elseif_cond, code);
+                    let elseif_jump = code.len();
+                    code.push(Instruction::JumpIfFalse(0));
+                    
+                    for stmt in elseif_block {
+                        Self::compile_node(stmt, code);
+                    }
+                    
+                    let elseif_end_jump = code.len();
+                    code.push(Instruction::Jump(0));
+                    jumps_to_end.push(elseif_end_jump);
+                    
+                    let next_elseif_start = code.len();
+                    code[elseif_jump] = Instruction::JumpIfFalse(next_elseif_start);
+                }
+                
+                // Compile else block
+                if let Some(else_stmts) = else_block {
+                    for stmt in else_stmts {
+                        Self::compile_node(stmt, code);
+                    }
+                }
+                
+                // Patch all jumps to end
+                let end_pos = code.len();
+                for jump_pos in jumps_to_end {
+                    code[jump_pos] = Instruction::Jump(end_pos);
+                }
+            }
+            AstNode::While(condition, body) => {
+                let loop_start = code.len();
+                
+                // Compile condition
+                Self::compile_node(condition, code);
+                
+                // Jump past loop if condition is false
+                let jump_to_end = code.len();
+                code.push(Instruction::JumpIfFalse(0));
+                
+                // Compile body
+                for stmt in body {
+                    Self::compile_node(stmt, code);
+                }
+                
+                // Jump back to start
+                code.push(Instruction::Jump(loop_start));
+                
+                // Patch the JumpIfFalse
+                let end_pos = code.len();
+                code[jump_to_end] = Instruction::JumpIfFalse(end_pos);
+            }
+            AstNode::For(var, start, end, step, body) => {
+                // Initialize loop variable
+                Self::compile_node(start, code);
+                code.push(Instruction::StoreVar(var.clone()));
+                
+                let loop_start = code.len();
+                
+                // Check condition: var <= end (or >= for negative step)
+                code.push(Instruction::LoadVar(var.clone()));
+                Self::compile_node(end, code);
+                code.push(Instruction::LessEqual); // TODO: Handle negative steps
+                
+                let jump_to_end = code.len();
+                code.push(Instruction::JumpIfFalse(0));
+                
+                // Compile body
+                for stmt in body {
+                    Self::compile_node(stmt, code);
+                }
+                
+                // Increment loop variable
+                code.push(Instruction::LoadVar(var.clone()));
+                if let Some(step_expr) = step {
+                    Self::compile_node(step_expr, code);
+                } else {
+                    code.push(Instruction::PushNumber(1.0));
+                }
+                code.push(Instruction::Add);
+                code.push(Instruction::StoreVar(var.clone()));
+                
+                // Jump back to start
+                code.push(Instruction::Jump(loop_start));
+                
+                // Patch the JumpIfFalse
+                let end_pos = code.len();
+                code[jump_to_end] = Instruction::JumpIfFalse(end_pos);
+            }
+            AstNode::FunctionDef(name, params, body) => {
+                // Compile function body separately
+                let mut func_code = Vec::new();
+                for stmt in body {
+                    Self::compile_node(stmt, &mut func_code);
+                }
+                // Add implicit return nil if no explicit return
+                func_code.push(Instruction::PushNil);
+                func_code.push(Instruction::Return);
+                
+                // Define the function with parameters
+                code.push(Instruction::DefineFunction(name.clone(), params.clone(), func_code.len()));
+                // Store the function instructions after the definition
+                code.extend(func_code);
+            }
+            AstNode::Return(expr) => {
+                if let Some(value) = expr {
+                    Self::compile_node(value, code);
+                } else {
+                    code.push(Instruction::PushNil);
+                }
+                code.push(Instruction::Return);
+            }
+            AstNode::FunctionCall(name, args) => {
+                // Push arguments onto stack
+                for arg in args {
+                    Self::compile_node(arg, code);
+                }
+                // Call the function by name
+                code.push(Instruction::Call(name.clone(), args.len()));
+            }
         }
     }
 }
 
 /// Value types for the Pickup VM.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Number(f64),
     String(String),
     Boolean(bool),
     Table(Vec<Value>),
+    Function(Vec<String>, Vec<Instruction>), // Parameters and compiled body
     Module(HashMap<String, Value>),
     Nil,
 }
@@ -107,8 +282,22 @@ impl std::fmt::Display for Value {
                 let items: Vec<String> = elems.iter().map(|v| v.to_string()).collect();
                 write!(f, "[{}]", items.join(", "))
             }
+            Value::Function(_, _) => write!(f, "<function>"),
             Value::Module(_) => write!(f, "<module>"),
             Value::Nil => write!(f, "nil"),
+        }
+    }
+}
+
+impl Value {
+    /// Convert value to boolean for conditional evaluation
+    pub fn is_truthy(&self) -> bool {
+        match self {
+            Value::Nil => false,
+            Value::Boolean(b) => *b,
+            Value::Number(n) => *n != 0.0,
+            Value::String(s) => !s.is_empty(),
+            _ => true,
         }
     }
 }
@@ -128,6 +317,13 @@ fn string_to_value(s: &str) -> Value {
     }
 }
 
+/// Call frame for function execution
+#[derive(Debug, Clone)]
+struct CallFrame {
+    return_pc: usize,
+    local_vars: HashMap<String, Value>,
+}
+
 /// Simple bytecode interpreter.
 pub struct Vm;
 
@@ -135,6 +331,8 @@ impl Vm {
     pub fn execute(code: &[Instruction], verbose: bool) {
         let mut stack: Vec<Value> = Vec::new();
         let mut vars: HashMap<String, Value> = HashMap::new();
+        let mut call_stack: Vec<CallFrame> = Vec::new();
+        let mut pc = 0; // Program counter
         
         // Initialize standard library
         let stdlib = crate::stdlib::create_stdlib();
@@ -143,29 +341,39 @@ impl Vm {
             println!("\n--- VM Execution Log ---");
         }
 
-        for (i, inst) in code.iter().enumerate() {
+        while pc < code.len() {
             if verbose {
-                println!("Instruction {}: {:?}", i, inst);
+                println!("Instruction {}: {:?}", pc, code[pc]);
             }
 
-            match inst {
+            match &code[pc] {
                 Instruction::PushNumber(n) => {
                     stack.push(Value::Number(*n));
                     if verbose {
                         println!("  Pushed number {}", n);
                     }
+                    pc += 1;
                 }
                 Instruction::PushString(s) => {
                     stack.push(Value::String(s.clone()));
                     if verbose {
                         println!("  Pushed string \"{}\"", s);
                     }
+                    pc += 1;
                 }
                 Instruction::PushBoolean(b) => {
                     stack.push(Value::Boolean(*b));
                     if verbose {
                         println!("  Pushed boolean {}", b);
                     }
+                    pc += 1;
+                }
+                Instruction::PushNil => {
+                    stack.push(Value::Nil);
+                    if verbose {
+                        println!("  Pushed nil");
+                    }
+                    pc += 1;
                 }
                 Instruction::LoadVar(name) => {
                     let val = vars.get(name).cloned().unwrap_or(Value::Nil);
@@ -173,6 +381,7 @@ impl Vm {
                     if verbose {
                         println!("  Loaded var {} = {:?}", name, val);
                     }
+                    pc += 1;
                 }
                 Instruction::StoreVar(name) => {
                     if let Some(val) = stack.pop() {
@@ -181,6 +390,7 @@ impl Vm {
                         }
                         vars.insert(name.clone(), val);
                     }
+                    pc += 1;
                 }
                 Instruction::Add => {
                     let b = stack.pop().unwrap();
@@ -192,6 +402,7 @@ impl Vm {
                             println!("  Add: {} + {} = {}", x, y, res);
                         }
                     }
+                    pc += 1;
                 }
                 Instruction::Sub => {
                     let b = stack.pop().unwrap();
@@ -203,6 +414,7 @@ impl Vm {
                             println!("  Sub: {} - {} = {}", x, y, res);
                         }
                     }
+                    pc += 1;
                 }
                 Instruction::Mul => {
                     let b = stack.pop().unwrap();
@@ -214,6 +426,7 @@ impl Vm {
                             println!("  Mul: {} * {} = {}", x, y, res);
                         }
                     }
+                    pc += 1;
                 }
                 Instruction::Div => {
                     let b = stack.pop().unwrap();
@@ -225,6 +438,7 @@ impl Vm {
                             println!("  Div: {} / {} = {}", x, y, res);
                         }
                     }
+                    pc += 1;
                 }
                 Instruction::Concat => {
                     let b = stack.pop().unwrap();
@@ -233,6 +447,132 @@ impl Vm {
                     stack.push(Value::String(result.clone()));
                     if verbose {
                         println!("  Concat: \"{}\" .. \"{}\" = \"{}\"", a, b, result);
+                    }
+                    pc += 1;
+                }
+                Instruction::Equal => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = a == b;
+                    stack.push(Value::Boolean(result));
+                    if verbose {
+                        println!("  Equal: {:?} == {:?} = {}", a, b, result);
+                    }
+                    pc += 1;
+                }
+                Instruction::NotEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = a != b;
+                    stack.push(Value::Boolean(result));
+                    if verbose {
+                        println!("  NotEqual: {:?} ~= {:?} = {}", a, b, result);
+                    }
+                    pc += 1;
+                }
+                Instruction::LessThan => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x < y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    if verbose {
+                        println!("  LessThan result: {}", result);
+                    }
+                    pc += 1;
+                }
+                Instruction::GreaterThan => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x > y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    if verbose {
+                        println!("  GreaterThan result: {}", result);
+                    }
+                    pc += 1;
+                }
+                Instruction::LessEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x <= y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    if verbose {
+                        println!("  LessEqual result: {}", result);
+                    }
+                    pc += 1;
+                }
+                Instruction::GreaterEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x >= y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    if verbose {
+                        println!("  GreaterEqual result: {}", result);
+                    }
+                    pc += 1;
+                }
+                Instruction::And => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = a.is_truthy() && b.is_truthy();
+                    stack.push(Value::Boolean(result));
+                    if verbose {
+                        println!("  And: {} and {} = {}", a.is_truthy(), b.is_truthy(), result);
+                    }
+                    pc += 1;
+                }
+                Instruction::Or => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = a.is_truthy() || b.is_truthy();
+                    stack.push(Value::Boolean(result));
+                    if verbose {
+                        println!("  Or: {} or {} = {}", a.is_truthy(), b.is_truthy(), result);
+                    }
+                    pc += 1;
+                }
+                Instruction::Not => {
+                    let a = stack.pop().unwrap();
+                    let result = !a.is_truthy();
+                    stack.push(Value::Boolean(result));
+                    if verbose {
+                        println!("  Not: not {} = {}", a.is_truthy(), result);
+                    }
+                    pc += 1;
+                }
+                Instruction::Jump(target) => {
+                    if verbose {
+                        println!("  Jump to {}", target);
+                    }
+                    pc = *target;
+                }
+                Instruction::JumpIfFalse(target) => {
+                    let condition = stack.pop().unwrap();
+                    if verbose {
+                        println!("  JumpIfFalse: condition = {:?}", condition);
+                    }
+                    if !condition.is_truthy() {
+                        if verbose {
+                            println!("  Jumping to {}", target);
+                        }
+                        pc = *target;
+                    } else {
+                        pc += 1;
                     }
                 }
                 Instruction::MakeTable(size) => {
@@ -247,6 +587,7 @@ impl Vm {
                     if verbose {
                         println!("  Created table with {} elements", size);
                     }
+                    pc += 1;
                 }
                 Instruction::GetIndex => {
                     let index = stack.pop().unwrap();
@@ -266,6 +607,7 @@ impl Vm {
                             }
                         }
                     }
+                    pc += 1;
                 }
                 Instruction::LoadModule(name) => {
                     if let Some(module) = stdlib.get(name) {
@@ -276,6 +618,7 @@ impl Vm {
                     } else {
                         eprintln!("Module '{}' not found", name);
                     }
+                    pc += 1;
                 }
                 Instruction::Print => {
                     if let Some(val) = stack.pop() {
@@ -286,6 +629,112 @@ impl Vm {
                             println!("{}", val);
                         }
                     }
+                    pc += 1;
+                }
+                Instruction::DefineFunction(name, params, body_len) => {
+                    // Extract function body from the code
+                    let body_start = pc + 1;
+                    let body_end = body_start + body_len;
+                    let body = code[body_start..body_end].to_vec();
+                    
+                    // Store function with parameters
+                    let func = Value::Function(params.clone(), body);
+                    vars.insert(name.clone(), func);
+                    
+                    if verbose {
+                        println!("  Defined function {} with {} params: {:?}", name, params.len(), params);
+                    }
+                    
+                    // Skip over the function body
+                    pc = body_end;
+                }
+                Instruction::Call(func_name, arg_count) => {
+                    // Get the function from variables
+                    if let Some(Value::Function(params, body)) = vars.get(func_name).cloned() {
+                        if params.len() != *arg_count {
+                            eprintln!("Error: Function {} expects {} arguments, got {}", func_name, params.len(), arg_count);
+                            pc += 1;
+                            continue;
+                        }
+                        
+                        // Pop arguments from stack in reverse order
+                        let mut args = Vec::new();
+                        for _ in 0..*arg_count {
+                            if let Some(arg) = stack.pop() {
+                                args.push(arg);
+                            }
+                        }
+                        args.reverse();
+                        
+                        // Create new call frame
+                        let mut local_vars = HashMap::new();
+                        
+                        // Bind parameters to arguments
+                        for (i, param_name) in params.iter().enumerate() {
+                            if i < args.len() {
+                                local_vars.insert(param_name.clone(), args[i].clone());
+                            }
+                        }
+                        
+                        // Save current state
+                        call_stack.push(CallFrame {
+                            return_pc: pc + 1,
+                            local_vars: vars.clone(),
+                        });
+                        
+                        // Set up function scope - merge local vars with parameters
+                        for (k, v) in local_vars.iter() {
+                            vars.insert(k.clone(), v.clone());
+                        }
+                        
+                        if verbose {
+                            println!("  Calling function {} with {} args", func_name, arg_count);
+                            println!("  Parameters bound: {:?}", local_vars);
+                        }
+                        
+                        // Execute function body - create new code context
+                        Self::execute_function(&body, &mut stack, &mut vars, verbose);
+                        
+                        // Restore state
+                        if let Some(frame) = call_stack.pop() {
+                            pc = frame.return_pc;
+                            vars = frame.local_vars;
+                        } else {
+                            pc += 1;
+                        }
+                    } else {
+                        eprintln!("Error: Function {} not found", func_name);
+                        pc += 1;
+                    }
+                }
+                Instruction::Return => {
+                    if verbose {
+                        println!("  Return from function");
+                    }
+                    // For function return, the calling context will handle it
+                    // This ends the function execution
+                    break;
+                }
+                Instruction::Break => {
+                    if verbose {
+                        println!("  Break (not yet implemented in loops)");
+                    }
+                    // Would need loop context to implement
+                    pc += 1;
+                }
+                Instruction::Continue => {
+                    if verbose {
+                        println!("  Continue (not yet implemented in loops)");
+                    }
+                    // Would need loop context to implement
+                    pc += 1;
+                }
+                Instruction::Pop => {
+                    stack.pop();
+                    if verbose {
+                        println!("  Pop");
+                    }
+                    pc += 1;
                 }
             }
 
@@ -298,6 +747,248 @@ impl Vm {
 
         if verbose {
             println!("--- VM Execution Completed ---\n");
+        }
+    }
+    
+    /// Execute a function body (used for function calls)
+    fn execute_function(code: &[Instruction], stack: &mut Vec<Value>, vars: &mut HashMap<String, Value>, verbose: bool) {
+        let mut pc = 0;
+        
+        while pc < code.len() {
+            if verbose {
+                println!("  [Function] Instruction {}: {:?}", pc, code[pc]);
+            }
+            
+            match &code[pc] {
+                Instruction::PushNumber(n) => {
+                    stack.push(Value::Number(*n));
+                    pc += 1;
+                }
+                Instruction::PushString(s) => {
+                    stack.push(Value::String(s.clone()));
+                    pc += 1;
+                }
+                Instruction::PushBoolean(b) => {
+                    stack.push(Value::Boolean(*b));
+                    pc += 1;
+                }
+                Instruction::PushNil => {
+                    stack.push(Value::Nil);
+                    pc += 1;
+                }
+                Instruction::LoadVar(name) => {
+                    let val = vars.get(name).cloned().unwrap_or(Value::Nil);
+                    stack.push(val);
+                    pc += 1;
+                }
+                Instruction::StoreVar(name) => {
+                    if let Some(val) = stack.pop() {
+                        vars.insert(name.clone(), val);
+                    }
+                    pc += 1;
+                }
+                Instruction::Add => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        stack.push(Value::Number(x + y));
+                    }
+                    pc += 1;
+                }
+                Instruction::Sub => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        stack.push(Value::Number(x - y));
+                    }
+                    pc += 1;
+                }
+                Instruction::Mul => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        stack.push(Value::Number(x * y));
+                    }
+                    pc += 1;
+                }
+                Instruction::Div => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        stack.push(Value::Number(x / y));
+                    }
+                    pc += 1;
+                }
+                Instruction::Concat => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = format!("{}{}", a, b);
+                    stack.push(Value::String(result));
+                    pc += 1;
+                }
+                Instruction::Equal => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(a == b));
+                    pc += 1;
+                }
+                Instruction::NotEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(a != b));
+                    pc += 1;
+                }
+                Instruction::LessThan => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x < y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    pc += 1;
+                }
+                Instruction::GreaterThan => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x > y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    pc += 1;
+                }
+                Instruction::LessEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x <= y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    pc += 1;
+                }
+                Instruction::GreaterEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x >= y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    pc += 1;
+                }
+                Instruction::And => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(a.is_truthy() && b.is_truthy()));
+                    pc += 1;
+                }
+                Instruction::Or => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(a.is_truthy() || b.is_truthy()));
+                    pc += 1;
+                }
+                Instruction::Not => {
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(!a.is_truthy()));
+                    pc += 1;
+                }
+                Instruction::Jump(target) => {
+                    pc = *target;
+                }
+                Instruction::JumpIfFalse(target) => {
+                    let condition = stack.pop().unwrap();
+                    if !condition.is_truthy() {
+                        pc = *target;
+                    } else {
+                        pc += 1;
+                    }
+                }
+                Instruction::Print => {
+                    if let Some(val) = stack.pop() {
+                        println!("{}", val);
+                    }
+                    pc += 1;
+                }
+                Instruction::MakeTable(size) => {
+                    let mut elements = Vec::new();
+                    for _ in 0..*size {
+                        if let Some(val) = stack.pop() {
+                            elements.push(val);
+                        }
+                    }
+                    elements.reverse();
+                    stack.push(Value::Table(elements));
+                    pc += 1;
+                }
+                Instruction::GetIndex => {
+                    let index = stack.pop().unwrap();
+                    let table = stack.pop().unwrap();
+                    
+                    if let (Value::Table(elems), Value::Number(idx)) = (table, index) {
+                        let i = idx as usize;
+                        if i < elems.len() {
+                            stack.push(elems[i].clone());
+                        } else {
+                            stack.push(Value::Nil);
+                        }
+                    }
+                    pc += 1;
+                }
+                Instruction::Call(func_name, arg_count) => {
+                    // Handle function calls within functions (including recursion)
+                    if let Some(Value::Function(params, body)) = vars.get(func_name).cloned() {
+                        if params.len() != *arg_count {
+                            eprintln!("Error: Function {} expects {} arguments, got {}", func_name, params.len(), arg_count);
+                            pc += 1;
+                            continue;
+                        }
+                        
+                        // Pop arguments from stack
+                        let mut args = Vec::new();
+                        for _ in 0..*arg_count {
+                            if let Some(arg) = stack.pop() {
+                                args.push(arg);
+                            }
+                        }
+                        args.reverse();
+                        
+                        // Create local scope with parameters bound to arguments
+                        let mut func_vars = vars.clone();
+                        for (i, param_name) in params.iter().enumerate() {
+                            if i < args.len() {
+                                func_vars.insert(param_name.clone(), args[i].clone());
+                            }
+                        }
+                        
+                        // Execute function recursively
+                        Self::execute_function(&body, stack, &mut func_vars, verbose);
+                        
+                        // Return value is left on stack by the function
+                    } else {
+                        eprintln!("Error: Function {} not found in function context", func_name);
+                        stack.push(Value::Nil);
+                    }
+                    pc += 1;
+                }
+                Instruction::Return => {
+                    // Return from function - the value on top of stack is the return value
+                    if verbose {
+                        println!("  [Function] Return");
+                    }
+                    break;
+                }
+                _ => {
+                    // For other instructions, just advance
+                    pc += 1;
+                }
+            }
         }
     }
 }
