@@ -92,6 +92,141 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
             let expr_node = parse_expression(expr, verbose)?;
             Ok(Some(AstNode::Print(Box::new(expr_node))))
         }
+        Rule::if_stmt => {
+            let inner: Vec<_> = pair.into_inner().collect();
+            if verbose {
+                println!("If statement inner: {:?}", inner);
+            }
+            
+            // Parse condition
+            let condition = parse_expression(inner[0].clone(), verbose)?;
+            
+            // Parse then block
+            let mut then_stmts = Vec::new();
+            let mut idx = 1;
+            
+            // Collect statements until we hit elseif_clause, else_clause, or end
+            while idx < inner.len() {
+                match inner[idx].as_rule() {
+                    Rule::elseif_clause | Rule::else_clause => break,
+                    _ => {
+                        if let Some(stmt) = parse_statement(inner[idx].clone(), verbose)? {
+                            then_stmts.push(stmt);
+                        }
+                        idx += 1;
+                    }
+                }
+            }
+            
+            // Parse elseif clauses
+            let mut elseif_clauses = Vec::new();
+            while idx < inner.len() && inner[idx].as_rule() == Rule::elseif_clause {
+                let elseif_inner: Vec<_> = inner[idx].clone().into_inner().collect();
+                let elseif_cond = parse_expression(elseif_inner[0].clone(), verbose)?;
+                let mut elseif_stmts = Vec::new();
+                for i in 1..elseif_inner.len() {
+                    if let Some(stmt) = parse_statement(elseif_inner[i].clone(), verbose)? {
+                        elseif_stmts.push(stmt);
+                    }
+                }
+                elseif_clauses.push((elseif_cond, elseif_stmts));
+                idx += 1;
+            }
+            
+            // Parse else clause
+            let else_block = if idx < inner.len() && inner[idx].as_rule() == Rule::else_clause {
+                let else_inner: Vec<_> = inner[idx].clone().into_inner().collect();
+                let mut else_stmts = Vec::new();
+                for else_pair in else_inner {
+                    if let Some(stmt) = parse_statement(else_pair, verbose)? {
+                        else_stmts.push(stmt);
+                    }
+                }
+                Some(else_stmts)
+            } else {
+                None
+            };
+            
+            Ok(Some(AstNode::If(Box::new(condition), then_stmts, elseif_clauses, else_block)))
+        }
+        Rule::while_stmt => {
+            let inner: Vec<_> = pair.into_inner().collect();
+            let condition = parse_expression(inner[0].clone(), verbose)?;
+            let mut body = Vec::new();
+            for i in 1..inner.len() {
+                if let Some(stmt) = parse_statement(inner[i].clone(), verbose)? {
+                    body.push(stmt);
+                }
+            }
+            Ok(Some(AstNode::While(Box::new(condition), body)))
+        }
+        Rule::for_stmt => {
+            let inner: Vec<_> = pair.into_inner().collect();
+            let var_name = inner[0].as_str().to_string();
+            let start = parse_expression(inner[1].clone(), verbose)?;
+            let end = parse_expression(inner[2].clone(), verbose)?;
+            
+            // Check if there's a step value
+            let mut body_start = 3;
+            let step = if inner.len() > 3 {
+                // Check if inner[3] is an expression (step) or a statement (body)
+                match inner[3].as_rule() {
+                    Rule::expression => {
+                        body_start = 4;
+                        Some(Box::new(parse_expression(inner[3].clone(), verbose)?))
+                    }
+                    _ => None
+                }
+            } else {
+                None
+            };
+            
+            let mut body = Vec::new();
+            for i in body_start..inner.len() {
+                if let Some(stmt) = parse_statement(inner[i].clone(), verbose)? {
+                    body.push(stmt);
+                }
+            }
+            Ok(Some(AstNode::For(var_name, Box::new(start), Box::new(end), step, body)))
+        }
+        Rule::function_def => {
+            let inner: Vec<_> = pair.into_inner().collect();
+            let func_name = inner[0].as_str().to_string();
+            
+            // Parse parameters
+            let mut params = Vec::new();
+            let mut body_start = 1;
+            
+            // Collect parameters until we hit a statement
+            while body_start < inner.len() {
+                match inner[body_start].as_rule() {
+                    Rule::identifier => {
+                        params.push(inner[body_start].as_str().to_string());
+                        body_start += 1;
+                    }
+                    _ => break
+                }
+            }
+            
+            // Parse body
+            let mut body = Vec::new();
+            for i in body_start..inner.len() {
+                if let Some(stmt) = parse_statement(inner[i].clone(), verbose)? {
+                    body.push(stmt);
+                }
+            }
+            
+            Ok(Some(AstNode::FunctionDef(func_name, params, body)))
+        }
+        Rule::return_stmt => {
+            let mut inner = pair.into_inner();
+            let value = if let Some(expr) = inner.next() {
+                Some(Box::new(parse_expression(expr, verbose)?))
+            } else {
+                None
+            };
+            Ok(Some(AstNode::Return(value)))
+        }
         Rule::expression => {
             let expr = parse_expression(pair, verbose)?;
             Ok(Some(expr))
@@ -206,6 +341,14 @@ fn parse_term(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
         Rule::boolean => {
             let value = pair.as_str() == "true";
             Ok(AstNode::Boolean(value))
+        }
+        Rule::nil => Ok(AstNode::Nil),
+        Rule::not_expr => {
+            let inner = pair.into_inner().next().ok_or_else(|| {
+                ParseError::AstError("Missing operand for not expression".into())
+            })?;
+            let operand = parse_term(inner, verbose)?;
+            Ok(AstNode::Not(Box::new(operand)))
         }
         Rule::identifier => Ok(AstNode::Identifier(pair.as_str().to_string())),
         Rule::function_call => parse_function_call(pair, verbose),

@@ -1,0 +1,35 @@
+-- stdlib.up - Test standard library features
+
+print("=== Standard Library Tests ===")
+print("")
+
+-- Test 1: Math module
+print("1. Math Module:")
+import "math"
+print("Math module loaded")
+print("Constants: pi, e")
+print("Functions: floor, ceil, round, abs, min, max, sqrt, pow, sin, cos, tan, random")
+
+-- Test 2: String module
+print("")
+print("2. String Module:")
+import "string"
+print("String module loaded")
+print("Available: length, upper, lower, substring, split, trim, replace")
+
+-- Test 3: JSON module
+print("")
+print("3. JSON Module:")
+import "json"
+print("JSON module loaded")
+print("Available: parse, stringify")
+
+-- Test 4: FS module
+print("")
+print("4. FS Module:")
+import "fs"
+print("FS module loaded")
+print("Available: read, write, exists, readdir, mkdir")
+
+print("")
+print("=== All Standard Library Modules Available ===")
