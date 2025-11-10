@@ -45,11 +45,45 @@ All roadmap features are now implemented! ✅
 5. ✅ Control flow (if/else/elseif)
 6. ✅ Loops (while, for)
 7. ✅ Comparison operators (==, ~=, <, >, <=, >=)
-8. ✅ Logical operators (and, or, not)
-9. ✅ Enhanced standard library (JSON, FS, String, Math modules)
-10. ✅ Comprehensive test suite
+8. ✅ Logical operators (and, or, not) with proper precedence
+9. ✅ User-defined functions with parameters and return values
+10. ✅ Enhanced standard library (JSON, FS, String, Math modules)
+11. ✅ Comprehensive test suite (14 tests)
 
 ## Language Features
+
+### Functions
+```pickup
+-- Define a function
+function add(a, b)
+    return a + b
+end
+
+-- Call the function
+result = add(10, 20)
+print(result)  -- Prints: 30
+
+-- Function with conditionals
+function max(a, b)
+    if a > b then
+        return a
+    else
+        return b
+    end
+end
+
+-- Recursive function (factorial)
+function factorial(n)
+    result = 1
+    for i = 1, n do
+        result = result * i
+    end
+    return result
+end
+
+fact5 = factorial(5)
+print(fact5)  -- Prints: 120
+```
 
 ### Control Flow
 ```pickup

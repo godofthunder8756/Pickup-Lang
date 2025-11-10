@@ -158,6 +158,40 @@ fn test_operator_precedence() {
 }
 
 #[test]
+fn test_function_definition_and_call() {
+    let source = r#"
+        function add(a, b)
+            result = a + b
+            return result
+        end
+        
+        sum = add(5, 3)
+    "#;
+    
+    let tokens = parser::tokenize(source, false).expect("Tokenization failed");
+    let ast = parser::parse_to_ast(tokens, false).expect("Parsing failed");
+    let bytecode = compiler::Compiler::compile(&ast, false);
+    compiler::Vm::execute(&bytecode, false);
+}
+
+#[test]
+fn test_function_with_string_return() {
+    let source = r#"
+        function greet(name)
+            message = "Hello, " .. name
+            return message
+        end
+        
+        greeting = greet("World")
+    "#;
+    
+    let tokens = parser::tokenize(source, false).expect("Tokenization failed");
+    let ast = parser::parse_to_ast(tokens, false).expect("Parsing failed");
+    let bytecode = compiler::Compiler::compile(&ast, false);
+    compiler::Vm::execute(&bytecode, false);
+}
+
+#[test]
 fn test_module_import() {
     let source = r#"
         import "json"

@@ -30,10 +30,12 @@ pub enum Instruction {
     LoadModule(String), // Load standard library module
     Jump(usize),       // Unconditional jump to instruction index
     JumpIfFalse(usize), // Jump to instruction index if top of stack is false
-    Call(usize),       // Call function with n arguments
+    Call(String, usize),       // Call function (name, arg_count)
     Return,            // Return from function
-    DefineFunction(String, usize, usize), // Define function (name, param_count, body_start)
+    DefineFunction(String, Vec<String>, usize), // Define function (name, params, body_len)
     Pop,               // Pop value from stack
+    Break,             // Break from loop
+    Continue,          // Continue loop
 }
 
 /// Compile an AST to bytecode instructions.
@@ -229,10 +231,12 @@ impl Compiler {
                 for stmt in body {
                     Self::compile_node(stmt, &mut func_code);
                 }
+                // Add implicit return nil if no explicit return
+                func_code.push(Instruction::PushNil);
                 func_code.push(Instruction::Return);
                 
-                // Store function as a value
-                code.push(Instruction::DefineFunction(name.clone(), params.len(), func_code.len()));
+                // Define the function with parameters
+                code.push(Instruction::DefineFunction(name.clone(), params.clone(), func_code.len()));
                 // Store the function instructions after the definition
                 code.extend(func_code);
             }
@@ -249,9 +253,8 @@ impl Compiler {
                 for arg in args {
                     Self::compile_node(arg, code);
                 }
-                // For now, we'll handle function calls specially
-                // This is a simplified version - real implementation would be more complex
-                code.push(Instruction::Call(args.len()));
+                // Call the function by name
+                code.push(Instruction::Call(name.clone(), args.len()));
             }
         }
     }
@@ -314,6 +317,13 @@ fn string_to_value(s: &str) -> Value {
     }
 }
 
+/// Call frame for function execution
+#[derive(Debug, Clone)]
+struct CallFrame {
+    return_pc: usize,
+    local_vars: HashMap<String, Value>,
+}
+
 /// Simple bytecode interpreter.
 pub struct Vm;
 
@@ -321,6 +331,7 @@ impl Vm {
     pub fn execute(code: &[Instruction], verbose: bool) {
         let mut stack: Vec<Value> = Vec::new();
         let mut vars: HashMap<String, Value> = HashMap::new();
+        let mut call_stack: Vec<CallFrame> = Vec::new();
         let mut pc = 0; // Program counter
         
         // Initialize standard library
@@ -620,36 +631,103 @@ impl Vm {
                     }
                     pc += 1;
                 }
-                Instruction::DefineFunction(name, param_count, body_len) => {
+                Instruction::DefineFunction(name, params, body_len) => {
                     // Extract function body from the code
                     let body_start = pc + 1;
                     let body_end = body_start + body_len;
                     let body = code[body_start..body_end].to_vec();
                     
-                    // For now, we store empty params - full implementation would extract them
-                    let func = Value::Function(vec![], body);
+                    // Store function with parameters
+                    let func = Value::Function(params.clone(), body);
                     vars.insert(name.clone(), func);
                     
                     if verbose {
-                        println!("  Defined function {} with {} params", name, param_count);
+                        println!("  Defined function {} with {} params: {:?}", name, params.len(), params);
                     }
                     
                     // Skip over the function body
                     pc = body_end;
                 }
-                Instruction::Call(_arg_count) => {
-                    // Simplified function call - would need full call stack in real implementation
-                    if verbose {
-                        println!("  Call instruction (simplified)");
+                Instruction::Call(func_name, arg_count) => {
+                    // Get the function from variables
+                    if let Some(Value::Function(params, body)) = vars.get(func_name).cloned() {
+                        if params.len() != *arg_count {
+                            eprintln!("Error: Function {} expects {} arguments, got {}", func_name, params.len(), arg_count);
+                            pc += 1;
+                            continue;
+                        }
+                        
+                        // Pop arguments from stack in reverse order
+                        let mut args = Vec::new();
+                        for _ in 0..*arg_count {
+                            if let Some(arg) = stack.pop() {
+                                args.push(arg);
+                            }
+                        }
+                        args.reverse();
+                        
+                        // Create new call frame
+                        let mut local_vars = HashMap::new();
+                        
+                        // Bind parameters to arguments
+                        for (i, param_name) in params.iter().enumerate() {
+                            if i < args.len() {
+                                local_vars.insert(param_name.clone(), args[i].clone());
+                            }
+                        }
+                        
+                        // Save current state
+                        call_stack.push(CallFrame {
+                            return_pc: pc + 1,
+                            local_vars: vars.clone(),
+                        });
+                        
+                        // Set up function scope - merge local vars with parameters
+                        for (k, v) in local_vars.iter() {
+                            vars.insert(k.clone(), v.clone());
+                        }
+                        
+                        if verbose {
+                            println!("  Calling function {} with {} args", func_name, arg_count);
+                            println!("  Parameters bound: {:?}", local_vars);
+                        }
+                        
+                        // Execute function body - create new code context
+                        Self::execute_function(&body, &mut stack, &mut vars, verbose);
+                        
+                        // Restore state
+                        if let Some(frame) = call_stack.pop() {
+                            pc = frame.return_pc;
+                            vars = frame.local_vars;
+                        } else {
+                            pc += 1;
+                        }
+                    } else {
+                        eprintln!("Error: Function {} not found", func_name);
+                        pc += 1;
                     }
-                    pc += 1;
                 }
                 Instruction::Return => {
                     if verbose {
-                        println!("  Return");
+                        println!("  Return from function");
                     }
-                    // Simplified - would pop call stack in real implementation
+                    // For function return, the calling context will handle it
+                    // This ends the function execution
                     break;
+                }
+                Instruction::Break => {
+                    if verbose {
+                        println!("  Break (not yet implemented in loops)");
+                    }
+                    // Would need loop context to implement
+                    pc += 1;
+                }
+                Instruction::Continue => {
+                    if verbose {
+                        println!("  Continue (not yet implemented in loops)");
+                    }
+                    // Would need loop context to implement
+                    pc += 1;
                 }
                 Instruction::Pop => {
                     stack.pop();
@@ -669,6 +747,187 @@ impl Vm {
 
         if verbose {
             println!("--- VM Execution Completed ---\n");
+        }
+    }
+    
+    /// Execute a function body (used for function calls)
+    fn execute_function(code: &[Instruction], stack: &mut Vec<Value>, vars: &mut HashMap<String, Value>, verbose: bool) {
+        let mut pc = 0;
+        
+        while pc < code.len() {
+            if verbose {
+                println!("  [Function] Instruction {}: {:?}", pc, code[pc]);
+            }
+            
+            match &code[pc] {
+                Instruction::PushNumber(n) => {
+                    stack.push(Value::Number(*n));
+                    pc += 1;
+                }
+                Instruction::PushString(s) => {
+                    stack.push(Value::String(s.clone()));
+                    pc += 1;
+                }
+                Instruction::PushBoolean(b) => {
+                    stack.push(Value::Boolean(*b));
+                    pc += 1;
+                }
+                Instruction::PushNil => {
+                    stack.push(Value::Nil);
+                    pc += 1;
+                }
+                Instruction::LoadVar(name) => {
+                    let val = vars.get(name).cloned().unwrap_or(Value::Nil);
+                    stack.push(val);
+                    pc += 1;
+                }
+                Instruction::StoreVar(name) => {
+                    if let Some(val) = stack.pop() {
+                        vars.insert(name.clone(), val);
+                    }
+                    pc += 1;
+                }
+                Instruction::Add => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        stack.push(Value::Number(x + y));
+                    }
+                    pc += 1;
+                }
+                Instruction::Sub => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        stack.push(Value::Number(x - y));
+                    }
+                    pc += 1;
+                }
+                Instruction::Mul => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        stack.push(Value::Number(x * y));
+                    }
+                    pc += 1;
+                }
+                Instruction::Div => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        stack.push(Value::Number(x / y));
+                    }
+                    pc += 1;
+                }
+                Instruction::Concat => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = format!("{}{}", a, b);
+                    stack.push(Value::String(result));
+                    pc += 1;
+                }
+                Instruction::Equal => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(a == b));
+                    pc += 1;
+                }
+                Instruction::NotEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(a != b));
+                    pc += 1;
+                }
+                Instruction::LessThan => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x < y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    pc += 1;
+                }
+                Instruction::GreaterThan => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x > y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    pc += 1;
+                }
+                Instruction::LessEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x <= y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    pc += 1;
+                }
+                Instruction::GreaterEqual => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    let result = if let (Value::Number(x), Value::Number(y)) = (a, b) {
+                        x >= y
+                    } else {
+                        false
+                    };
+                    stack.push(Value::Boolean(result));
+                    pc += 1;
+                }
+                Instruction::And => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(a.is_truthy() && b.is_truthy()));
+                    pc += 1;
+                }
+                Instruction::Or => {
+                    let b = stack.pop().unwrap();
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(a.is_truthy() || b.is_truthy()));
+                    pc += 1;
+                }
+                Instruction::Not => {
+                    let a = stack.pop().unwrap();
+                    stack.push(Value::Boolean(!a.is_truthy()));
+                    pc += 1;
+                }
+                Instruction::Jump(target) => {
+                    pc = *target;
+                }
+                Instruction::JumpIfFalse(target) => {
+                    let condition = stack.pop().unwrap();
+                    if !condition.is_truthy() {
+                        pc = *target;
+                    } else {
+                        pc += 1;
+                    }
+                }
+                Instruction::Print => {
+                    if let Some(val) = stack.pop() {
+                        println!("{}", val);
+                    }
+                    pc += 1;
+                }
+                Instruction::Return => {
+                    // Return from function - the value on top of stack is the return value
+                    if verbose {
+                        println!("  [Function] Return");
+                    }
+                    break;
+                }
+                _ => {
+                    // For other instructions, just advance
+                    pc += 1;
+                }
+            }
         }
     }
 }

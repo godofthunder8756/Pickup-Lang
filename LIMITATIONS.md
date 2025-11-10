@@ -28,32 +28,27 @@ end' > test.up
 pick test.up
 ```
 
-### 2. User-Defined Functions
-**Issue:** Function definitions are parsed and compiled, but calling user-defined functions is not yet fully implemented. Function calls currently work only as placeholders.
-
-**Status:** Grammar and AST support added, runtime execution pending.
-
-### 3. Member Access (Dot Notation)
+### 2. Member Access (Dot Notation)
 **Issue:** Module member access like `math.pi` or `json.parse()` is not yet supported. Modules are loaded but their members cannot be accessed directly.
 
 **Status:** Modules load successfully, but individual function/constant access needs implementation.
 
-### 4. Standard Library Native Implementations
+### 3. Standard Library Native Implementations
 **Issue:** Standard library functions (JSON, FS, String, Math) are currently placeholders. They're registered in the module system but don't perform actual operations.
 
 **Status:** Framework is in place, native implementations need to be added.
 
-### 5. Break and Continue
+### 4. Break and Continue
 **Issue:** Loop control statements (break, continue) are not yet implemented.
 
 **Workaround:** Use conditional logic to control loop execution.
 
-### 6. Error Handling
+### 5. Error Handling
 **Issue:** No try-catch or error handling mechanism exists yet.
 
 **Status:** Planned for future release.
 
-### 7. Table Key-Value Access
+### 6. Table Key-Value Access
 **Issue:** Only array-style tables with numeric indices are supported. Dictionary-style tables with string keys are not yet implemented.
 
 **Current Support:**
@@ -71,9 +66,8 @@ dict = {name = "Alice", age = 30}  -- Not supported
 
 ### Short Term (Next Release)
 1. Multi-line REPL support with continuation prompts
-2. User-defined function execution
-3. Member access (dot notation) for modules
-4. Break and continue statements
+2. Member access (dot notation) for modules
+3. Break and continue statements
 
 ### Medium Term
 1. Native implementations for standard library functions
@@ -124,11 +118,14 @@ Current test coverage focuses on:
 - ✅ Loops (while, for)
 - ✅ Comparison operators
 - ✅ Logical operators
+- ✅ Operator precedence
 - ✅ Module imports
 - ✅ Nil values
+- ✅ User-defined functions
+- ✅ Function calls with parameters
+- ✅ Function return values
 
 Areas needing more tests:
-- ❌ User-defined functions
 - ❌ Error conditions and edge cases
 - ❌ Complex nested structures
 - ❌ Standard library functions
