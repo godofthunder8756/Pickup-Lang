@@ -1,0 +1,128 @@
+name: Nightly Release
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    name: Build and Upload
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: pick
+            asset_name: pick-linux-x86_64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            artifact_name: pick
+            asset_name: pick-linux-x86_64-musl
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: pick.exe
+            asset_name: pick-windows-x86_64.exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: pick
+            asset_name: pick-macos-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: pick
+            asset_name: pick-macos-aarch64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install musl tools
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Strip binary (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        run: strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+
+      - name: Rename asset (Unix)
+        if: matrix.os != 'windows-latest'
+        run: mv target/${{ matrix.target }}/release/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/${{ matrix.asset_name }}
+
+      - name: Rename asset (Windows)
+        if: matrix.os == 'windows-latest'
+        run: Move-Item -Path "target\${{ matrix.target }}\release\${{ matrix.artifact_name }}" -Destination "target\${{ matrix.target }}\release\${{ matrix.asset_name }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ./target/${{ matrix.target }}/release/${{ matrix.asset_name }}
+          retention-days: 90
+
+  create-nightly-release:
+    name: Create/Update Nightly Release
+    needs: build-and-upload
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R ./artifacts
+
+      - name: Create or Update Nightly Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: Nightly Build (Latest from main)
+          draft: false
+          prerelease: true
+          body: |
+            ## Pickup-Lang Nightly Build
+            
+            **⚠️ This is an automated nightly build from the latest main branch commit.**
+            
+            **Commit**: ${{ github.sha }}
+            **Build Date**: ${{ github.event.head_commit.timestamp }}
+            
+            ### Installation
+            
+            Download the appropriate binary for your platform from the assets below.
+            
+            #### Linux / macOS
+            ```bash
+            # Download the binary (replace with actual filename)
+            chmod +x pick-*
+            sudo mv pick-* /usr/local/bin/pick
+            ```
+            
+            #### Windows
+            Download `pick-windows-x86_64.exe` and add it to your PATH.
+            
+            ### Available Builds
+            - **pick-linux-x86_64**: Linux (glibc, x86-64)
+            - **pick-linux-x86_64-musl**: Linux (musl, x86-64, static)
+            - **pick-windows-x86_64.exe**: Windows (x86-64)
+            - **pick-macos-x86_64**: macOS (Intel)
+            - **pick-macos-aarch64**: macOS (Apple Silicon)
+            
+            ### Latest Changes
+            See the [commit history](https://github.com/${{ github.repository }}/commits/main) for details.
+          files: |
+            ./artifacts/**/pick-*
