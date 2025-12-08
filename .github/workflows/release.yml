@@ -16,21 +16,21 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
       version: ${{ steps.get_version.outputs.version }}
+      tag: ${{ steps.get_version.outputs.tag }}
     steps:
       - name: Get version from tag
         id: get_version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref_name }}
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
           body: |
@@ -102,12 +102,16 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
 
+      - name: Rename asset (Unix)
+        if: matrix.os != 'windows-latest'
+        run: mv target/${{ matrix.target }}/release/${{ matrix.artifact_name }} target/${{ matrix.target }}/release/${{ matrix.asset_name }}
+
+      - name: Rename asset (Windows)
+        if: matrix.os == 'windows-latest'
+        run: Move-Item -Path "target\\${{ matrix.target }}\\release\\${{ matrix.artifact_name }}" -Destination "target\\${{ matrix.target }}\\release\\${{ matrix.asset_name }}"
+
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.asset_name }}
-          asset_content_type: application/octet-stream
+          tag_name: ${{ needs.create-release.outputs.tag }}
+          files: ./target/${{ matrix.target }}/release/${{ matrix.asset_name }}
