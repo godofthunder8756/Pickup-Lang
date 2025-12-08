@@ -105,9 +105,22 @@ jobs:
             
             #### Linux / macOS
             ```bash
-            # Download the binary (replace with actual filename)
-            chmod +x pick-*
-            sudo mv pick-* /usr/local/bin/pick
+            # Download the binary for your platform
+            # For Linux x86_64 (glibc):
+            chmod +x pick-linux-x86_64
+            sudo mv pick-linux-x86_64 /usr/local/bin/pick
+            
+            # For Linux x86_64 (musl):
+            chmod +x pick-linux-x86_64-musl
+            sudo mv pick-linux-x86_64-musl /usr/local/bin/pick
+            
+            # For macOS Intel:
+            chmod +x pick-macos-x86_64
+            sudo mv pick-macos-x86_64 /usr/local/bin/pick
+            
+            # For macOS Apple Silicon:
+            chmod +x pick-macos-aarch64
+            sudo mv pick-macos-aarch64 /usr/local/bin/pick
             ```
             
             #### Windows
@@ -122,4 +135,6 @@ jobs:
             
             ### Latest Changes
             See the [commit history](https://github.com/${{ github.repository }}/commits/main) for details.
+          # Pattern matches: ./artifacts/{artifact-name}/{binary-file}
+          # Each artifact is downloaded into a subdirectory named after the artifact
           files: ./artifacts/*/*
