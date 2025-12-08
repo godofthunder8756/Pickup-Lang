@@ -1,9 +1,9 @@
 [package]
 name = "pickup-lang"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Aidan Ahern"]
-description = "Pickup: A modern Lua-inspired scripting language"
+description = "Pickup: A production-ready, Lua-inspired scripting language with comprehensive standard library"
 license = "MIT"
 
 [lib]

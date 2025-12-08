@@ -14,6 +14,7 @@ op_add   = { "+" }
 op_sub   = { "-" }
 op_mul   = { "*" }
 op_div   = { "/" }
+op_mod   = { "%" }
 op_eq    = { "==" }
 op_neq   = { "~=" }
 op_lt    = { "<" }
@@ -23,25 +24,40 @@ op_ge    = { ">=" }
 op_and   = @{ "and" ~ !ASCII_ALPHANUMERIC }
 op_or    = @{ "or" ~ !ASCII_ALPHANUMERIC }
 op_concat = { ".." }
+op_dot   = { "." }
 
-operator = _{ op_eq | op_neq | op_le | op_ge | op_lt | op_gt | op_add | op_sub | op_mul | op_div | op_and | op_or | op_concat }
+operator = _{ op_eq | op_neq | op_le | op_ge | op_lt | op_gt | op_add | op_sub | op_mul | op_div | op_mod | op_and | op_or | op_concat }
 
 // Keywords
-keyword = _{ "if" | "then" | "else" | "elseif" | "end" | "function" | "return" | "for" | "do" | "while" | "break" | "true" | "false" | "nil" | "import" | "from" | "require" | "not" }
+keyword = _{ "if" | "then" | "else" | "elseif" | "end" | "function" | "return" | "for" | "do" | "while" | "break" | "continue" | "true" | "false" | "nil" | "import" | "from" | "require" | "not" | "local" | "try" | "catch" | "throw" }
 
 // Grammar
 program     = { SOI ~ statement* ~ EOI }
-statement   = _{ (if_stmt | while_stmt | for_stmt | function_def | return_stmt | import_stmt | assignment | function_call | print_stmt) ~ NEWLINE* }
+statement   = _{ (try_stmt | if_stmt | while_stmt | for_stmt | function_def | return_stmt | break_stmt | continue_stmt | throw_stmt | import_stmt | local_assignment | assignment | method_call | function_call | print_stmt) ~ NEWLINE* }
 expression  = { term ~ (operator ~ term)* }
-term        = _{ not_expr | index_access | table | number | string | boolean | nil | function_call | identifier | "(" ~ expression ~ ")" }
+term        = _{ not_expr | method_call | member_access | index_access | table | dictionary | number | string | boolean | nil | lambda | function_call | identifier | "(" ~ expression ~ ")" }
 
 // Literals
 nil = { "nil" }
-not_expr = { "not" ~ (identifier | boolean | "(" ~ expression ~ ")") }
+not_expr = { "not" ~ (member_access | identifier | boolean | "(" ~ expression ~ ")") }
+
+// Lambda/Anonymous functions
+lambda = { "function" ~ "(" ~ (identifier ~ ("," ~ identifier)*)? ~ ")" ~ NEWLINE* ~ statement* ~ "end" }
+
+// Member access (dot notation) - e.g., math.pi, table.field
+member_access = { (identifier | "(" ~ expression ~ ")") ~ ("." ~ identifier)+ }
+
+// Method call - e.g., math.floor(x), string.upper(s)
+method_call = { member_access ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
+
+// Dictionary/Object literal - e.g., { name = "John", age = 30 }
+dictionary = { "{" ~ (dict_entry ~ ("," ~ dict_entry)*)? ~ "}" }
+dict_entry = { (identifier | string) ~ "=" ~ expression }
 
 // Statements
 import_stmt = { "import" ~ string }
-assignment  = { identifier ~ "=" ~ expression }
+assignment  = { (member_access | index_access | identifier) ~ "=" ~ expression }
+local_assignment = { "local" ~ identifier ~ "=" ~ expression }
 function_call = { identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")" }
 print_stmt  = { "print" ~ "(" ~ expression ~ ")" }
 
@@ -53,11 +69,18 @@ else_clause = { "else" ~ NEWLINE* ~ statement* }
 // Loops
 while_stmt = { "while" ~ expression ~ "do" ~ NEWLINE* ~ statement* ~ "end" }
 for_stmt = { "for" ~ identifier ~ "=" ~ expression ~ "," ~ expression ~ ("," ~ expression)? ~ "do" ~ NEWLINE* ~ statement* ~ "end" }
+break_stmt = { "break" }
+continue_stmt = { "continue" }
 
 // Functions
 function_def = { "function" ~ identifier ~ "(" ~ (identifier ~ ("," ~ identifier)*)? ~ ")" ~ NEWLINE* ~ statement* ~ "end" }
 return_stmt = { "return" ~ expression? }
 
+// Error handling
+try_stmt = { "try" ~ NEWLINE* ~ statement* ~ catch_clause ~ "end" }
+catch_clause = { "catch" ~ identifier? ~ NEWLINE* ~ statement* }
+throw_stmt = { "throw" ~ expression }
+
 // Table and indexing
 table = { "[" ~ (expression ~ ("," ~ expression)*)? ~ "]" }
-index_access = { (identifier | table) ~ "[" ~ expression ~ "]" }
+index_access = { (member_access | identifier | table | "(" ~ expression ~ ")") ~ "[" ~ expression ~ "]" }

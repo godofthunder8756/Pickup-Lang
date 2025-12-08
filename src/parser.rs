@@ -67,15 +67,25 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
                 println!("Assignment inner: {:?}", inner);
             }
 
-            // First element is always the identifier
-            let id_node = AstNode::Identifier(inner[0].as_str().to_string());
+            // First element is the target (identifier, member_access, or index_access)
+            let target_node = parse_term(inner[0].clone(), verbose)?;
 
             // Parse the right-hand side as a full expression
             let value_node = parse_expression(inner[1].clone(), verbose)?;
             Ok(Some(AstNode::Assignment(
-                Box::new(id_node),
+                Box::new(target_node),
                 Box::new(value_node),
             )))
+        }
+        Rule::local_assignment => {
+            let inner: Vec<_> = pair.into_inner().collect();
+            if verbose {
+                println!("Local assignment inner: {:?}", inner);
+            }
+
+            let var_name = inner[0].as_str().to_string();
+            let value_node = parse_expression(inner[1].clone(), verbose)?;
+            Ok(Some(AstNode::LocalAssignment(var_name, Box::new(value_node))))
         }
         Rule::function_call => {
             let function_call = parse_function_call(pair, verbose)?;
@@ -83,6 +93,10 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
                 AstNode::Print(_) => Ok(Some(function_call)),
                 _ => Ok(Some(function_call)),
             }
+        }
+        Rule::method_call => {
+            let method_call = parse_method_call(pair, verbose)?;
+            Ok(Some(method_call))
         }
         Rule::print_stmt => {
             let mut inner = pair.into_inner();
@@ -97,14 +111,14 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
             if verbose {
                 println!("If statement inner: {:?}", inner);
             }
-            
+
             // Parse condition
             let condition = parse_expression(inner[0].clone(), verbose)?;
-            
+
             // Parse then block
             let mut then_stmts = Vec::new();
             let mut idx = 1;
-            
+
             // Collect statements until we hit elseif_clause, else_clause, or end
             while idx < inner.len() {
                 match inner[idx].as_rule() {
@@ -117,7 +131,7 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
                     }
                 }
             }
-            
+
             // Parse elseif clauses
             let mut elseif_clauses = Vec::new();
             while idx < inner.len() && inner[idx].as_rule() == Rule::elseif_clause {
@@ -132,7 +146,7 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
                 elseif_clauses.push((elseif_cond, elseif_stmts));
                 idx += 1;
             }
-            
+
             // Parse else clause
             let else_block = if idx < inner.len() && inner[idx].as_rule() == Rule::else_clause {
                 let else_inner: Vec<_> = inner[idx].clone().into_inner().collect();
@@ -146,7 +160,7 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
             } else {
                 None
             };
-            
+
             Ok(Some(AstNode::If(Box::new(condition), then_stmts, elseif_clauses, else_block)))
         }
         Rule::while_stmt => {
@@ -165,7 +179,7 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
             let var_name = inner[0].as_str().to_string();
             let start = parse_expression(inner[1].clone(), verbose)?;
             let end = parse_expression(inner[2].clone(), verbose)?;
-            
+
             // Check if there's a step value
             let mut body_start = 3;
             let step = if inner.len() > 3 {
@@ -180,7 +194,7 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
             } else {
                 None
             };
-            
+
             let mut body = Vec::new();
             for i in body_start..inner.len() {
                 if let Some(stmt) = parse_statement(inner[i].clone(), verbose)? {
@@ -192,11 +206,11 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
         Rule::function_def => {
             let inner: Vec<_> = pair.into_inner().collect();
             let func_name = inner[0].as_str().to_string();
-            
+
             // Parse parameters
             let mut params = Vec::new();
             let mut body_start = 1;
-            
+
             // Collect parameters until we hit a statement
             while body_start < inner.len() {
                 match inner[body_start].as_rule() {
@@ -207,7 +221,7 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
                     _ => break
                 }
             }
-            
+
             // Parse body
             let mut body = Vec::new();
             for i in body_start..inner.len() {
@@ -215,7 +229,7 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
                     body.push(stmt);
                 }
             }
-            
+
             Ok(Some(AstNode::FunctionDef(func_name, params, body)))
         }
         Rule::return_stmt => {
@@ -226,6 +240,64 @@ fn parse_statement(pair: Pair<Rule>, verbose: bool) -> Result<Option<AstNode>, P
                 None
             };
             Ok(Some(AstNode::Return(value)))
+        }
+        Rule::break_stmt => {
+            Ok(Some(AstNode::Break))
+        }
+        Rule::continue_stmt => {
+            Ok(Some(AstNode::Continue))
+        }
+        Rule::try_stmt => {
+            let inner: Vec<_> = pair.into_inner().collect();
+            if verbose {
+                println!("Try statement inner: {:?}", inner);
+            }
+
+            let mut try_body = Vec::new();
+            let mut idx = 0;
+
+            // Parse try block statements until catch clause
+            while idx < inner.len() && inner[idx].as_rule() != Rule::catch_clause {
+                if let Some(stmt) = parse_statement(inner[idx].clone(), verbose)? {
+                    try_body.push(stmt);
+                }
+                idx += 1;
+            }
+
+            // Parse catch clause
+            let (catch_var, catch_body) = if idx < inner.len() && inner[idx].as_rule() == Rule::catch_clause {
+                let catch_inner: Vec<_> = inner[idx].clone().into_inner().collect();
+                let mut catch_var = None;
+                let mut catch_stmts = Vec::new();
+                let mut catch_idx = 0;
+
+                // Check for optional catch variable
+                if !catch_inner.is_empty() && catch_inner[0].as_rule() == Rule::identifier {
+                    catch_var = Some(catch_inner[0].as_str().to_string());
+                    catch_idx = 1;
+                }
+
+                // Parse catch block statements
+                for i in catch_idx..catch_inner.len() {
+                    if let Some(stmt) = parse_statement(catch_inner[i].clone(), verbose)? {
+                        catch_stmts.push(stmt);
+                    }
+                }
+
+                (catch_var, catch_stmts)
+            } else {
+                (None, Vec::new())
+            };
+
+            Ok(Some(AstNode::TryCatch(try_body, catch_var, catch_body)))
+        }
+        Rule::throw_stmt => {
+            let mut inner = pair.into_inner();
+            let expr = inner.next().ok_or_else(|| {
+                ParseError::AstError("Missing expression in throw statement".into())
+            })?;
+            let expr_node = parse_expression(expr, verbose)?;
+            Ok(Some(AstNode::Throw(Box::new(expr_node))))
         }
         Rule::expression => {
             let expr = parse_expression(pair, verbose)?;
@@ -285,6 +357,123 @@ fn parse_function_call(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, Parse
     }
 }
 
+fn parse_method_call(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
+    if verbose {
+        println!("Parsing method call: {:?}", pair);
+    }
+    let inner: Vec<_> = pair.into_inner().collect();
+
+    if inner.is_empty() {
+        return Err(ParseError::AstError("Empty method call".into()));
+    }
+
+    // First element should be member_access
+    let member_access_pair = inner[0].clone();
+    let member_inner: Vec<_> = member_access_pair.into_inner().collect();
+
+    // Get base object
+    let base = parse_term(member_inner[0].clone(), verbose)?;
+
+    // Get member chain
+    let mut members = Vec::new();
+    for i in 1..member_inner.len() {
+        if member_inner[i].as_rule() == Rule::identifier {
+            members.push(member_inner[i].as_str().to_string());
+        }
+    }
+
+    // Parse arguments
+    let mut args = Vec::new();
+    for i in 1..inner.len() {
+        args.push(parse_expression(inner[i].clone(), verbose)?);
+    }
+
+    Ok(AstNode::MethodCall(Box::new(base), members, args))
+}
+
+fn parse_member_access(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
+    if verbose {
+        println!("Parsing member access: {:?}", pair);
+    }
+    let inner: Vec<_> = pair.into_inner().collect();
+
+    if inner.is_empty() {
+        return Err(ParseError::AstError("Empty member access".into()));
+    }
+
+    // Get base object
+    let base = parse_term(inner[0].clone(), verbose)?;
+
+    // Get member chain
+    let mut members = Vec::new();
+    for i in 1..inner.len() {
+        if inner[i].as_rule() == Rule::identifier {
+            members.push(inner[i].as_str().to_string());
+        }
+    }
+
+    Ok(AstNode::MemberAccess(Box::new(base), members))
+}
+
+fn parse_lambda(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
+    if verbose {
+        println!("Parsing lambda: {:?}", pair);
+    }
+    let inner: Vec<_> = pair.into_inner().collect();
+
+    // Parse parameters
+    let mut params = Vec::new();
+    let mut body_start = 0;
+
+    // Collect parameters until we hit a statement
+    while body_start < inner.len() {
+        match inner[body_start].as_rule() {
+            Rule::identifier => {
+                params.push(inner[body_start].as_str().to_string());
+                body_start += 1;
+            }
+            _ => break
+        }
+    }
+
+    // Parse body
+    let mut body = Vec::new();
+    for i in body_start..inner.len() {
+        if let Some(stmt) = parse_statement(inner[i].clone(), verbose)? {
+            body.push(stmt);
+        }
+    }
+
+    Ok(AstNode::Lambda(params, body))
+}
+
+fn parse_dictionary(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
+    if verbose {
+        println!("Parsing dictionary: {:?}", pair);
+    }
+    let inner: Vec<_> = pair.into_inner().collect();
+
+    let mut entries = Vec::new();
+    for entry_pair in inner {
+        if entry_pair.as_rule() == Rule::dict_entry {
+            let entry_inner: Vec<_> = entry_pair.into_inner().collect();
+            if entry_inner.len() >= 2 {
+                // Key can be identifier or string
+                let key = if entry_inner[0].as_rule() == Rule::string {
+                    let text = entry_inner[0].as_str();
+                    text[1..text.len() - 1].to_string() // Remove quotes
+                } else {
+                    entry_inner[0].as_str().to_string()
+                };
+                let value = parse_expression(entry_inner[1].clone(), verbose)?;
+                entries.push((key, value));
+            }
+        }
+    }
+
+    Ok(AstNode::Dictionary(entries))
+}
+
 // Operator precedence levels (higher number = higher precedence)
 fn get_precedence(op: &str) -> u8 {
     match op {
@@ -294,7 +483,7 @@ fn get_precedence(op: &str) -> u8 {
         "<" | ">" | "<=" | ">=" => 4,
         ".." => 5,
         "+" | "-" => 6,
-        "*" | "/" => 7,
+        "*" | "/" | "%" => 7,
         _ => 0,
     }
 }
@@ -378,7 +567,7 @@ fn parse_expression_with_precedence(
             // Build the right subtree with remaining tokens
             let remaining = &pairs[i - 1..];
             right = parse_expression_with_precedence(remaining, precedence + 1, verbose)?;
-            
+
             // Calculate how many tokens were consumed
             // This is simplified - we consumed everything from i-1 onwards into right
             i = pairs.len();
@@ -419,6 +608,10 @@ fn parse_term(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
         }
         Rule::identifier => Ok(AstNode::Identifier(pair.as_str().to_string())),
         Rule::function_call => parse_function_call(pair, verbose),
+        Rule::method_call => parse_method_call(pair, verbose),
+        Rule::member_access => parse_member_access(pair, verbose),
+        Rule::lambda => parse_lambda(pair, verbose),
+        Rule::dictionary => parse_dictionary(pair, verbose),
         Rule::table => {
             let mut elements = Vec::new();
             for inner_pair in pair.into_inner() {
@@ -435,7 +628,7 @@ fn parse_term(pair: Pair<Rule>, verbose: bool) -> Result<AstNode, ParseError> {
             let index = parse_expression(inner[1].clone(), verbose)?;
             Ok(AstNode::Index(Box::new(base), Box::new(index)))
         }
-        Rule::op_add | Rule::op_sub | Rule::op_mul | Rule::op_div | Rule::op_concat => {
+        Rule::op_add | Rule::op_sub | Rule::op_mul | Rule::op_div | Rule::op_mod | Rule::op_concat => {
             // Binary operators are handled in parse_expression, this should not happen
             Err(ParseError::AstError(format!(
                 "Unexpected operator rule: {:?}",
