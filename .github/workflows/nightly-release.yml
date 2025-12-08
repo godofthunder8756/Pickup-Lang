@@ -96,7 +96,8 @@ jobs:
             **⚠️ This is an automated nightly build from the latest main branch commit.**
             
             **Commit**: ${{ github.sha }}
-            **Build Date**: ${{ github.event.head_commit.timestamp }}
+            **Triggered by**: ${{ github.actor }}
+            **Workflow Run**: [View Details](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
             
             ### Installation
             
