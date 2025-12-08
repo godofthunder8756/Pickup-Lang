@@ -122,5 +122,4 @@ jobs:
             
             ### Latest Changes
             See the [commit history](https://github.com/${{ github.repository }}/commits/main) for details.
-          files: |
-            ./artifacts/*/pick-*
+          files: ./artifacts/*/*
