@@ -18,7 +18,11 @@ Pickup is a lightweight, production-ready scripting language inspired by Lua. It
 
 ### Download Pre-built Binaries
 
-Download the latest release for your platform from the [Releases page](https://github.com/godofthunder8756/Pickup-Lang/releases).
+Download binaries for your platform from the [Releases page](https://github.com/godofthunder8756/Pickup-Lang/releases).
+
+**Available Downloads:**
+- **Nightly builds**: Automatically built from the latest main branch (pre-release)
+- **Versioned releases**: Stable releases with semantic versioning (e.g., v0.2.0)
 
 **Linux/macOS:**
 ```bash

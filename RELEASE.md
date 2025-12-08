@@ -1,6 +1,21 @@
 # Release Process
 
-This document describes how to create a new release for Pickup-Lang.
+This document describes how to create releases for Pickup-Lang.
+
+## Types of Releases
+
+### Nightly Builds (Automatic)
+
+**Nightly builds are created automatically on every push to the main branch.**
+
+- A `nightly` pre-release is automatically updated with the latest binaries
+- This happens automatically through GitHub Actions
+- Binaries are available immediately after CI completes
+- Access at: [Releases page](https://github.com/godofthunder8756/Pickup-Lang/releases)
+
+### Versioned Releases (Manual)
+
+For stable, versioned releases, follow the process below.
 
 ## Prerequisites
 
