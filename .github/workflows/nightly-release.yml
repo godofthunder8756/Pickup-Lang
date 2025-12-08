@@ -71,7 +71,7 @@ jobs:
         with:
           name: ${{ matrix.asset_name }}
           path: ./target/${{ matrix.target }}/release/${{ matrix.asset_name }}
-          retention-days: 90
+          retention-days: 7
 
   create-nightly-release:
     name: Create/Update Nightly Release
@@ -82,9 +82,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
-
-      - name: Display structure of downloaded files
-        run: ls -R ./artifacts
 
       - name: Create or Update Nightly Release
         uses: softprops/action-gh-release@v2
