@@ -135,6 +135,7 @@ jobs:
             
             ### Latest Changes
             See the [commit history](https://github.com/${{ github.repository }}/commits/main) for details.
-          # Pattern matches: ./artifacts/{artifact-name}/{binary-file}
-          # Each artifact is downloaded into a subdirectory named after the artifact
+          # Pattern ./artifacts/*/* matches all files in artifact subdirectories
+          # Structure: ./artifacts/{artifact-name}/{binary-file}
+          # Example: ./artifacts/pick-linux-x86_64/pick-linux-x86_64
           files: ./artifacts/*/*
