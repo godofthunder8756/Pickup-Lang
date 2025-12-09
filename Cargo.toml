@@ -27,3 +27,9 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # CLI argument parsing
 clap = { version = "4.4", features = ["derive"] }
+# Regex for pattern matching
+regex = "1.10"
+# Base64 encoding/decoding
+base64 = "0.21"
+# Date/time support
+chrono = "0.4"
