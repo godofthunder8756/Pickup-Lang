@@ -1,0 +1,647 @@
+================================================================================
+                         PICKUP LANGUAGE STANDARD LIBRARY
+                              Complete API Reference
+================================================================================
+
+Pickup is a Lua-inspired scripting language with a comprehensive standard
+library for production use. This document covers all available modules and
+their functions.
+
+================================================================================
+                                   MATH MODULE
+================================================================================
+
+Constants:
+  math.pi         -> 3.14159265358979...
+  math.e          -> 2.71828182845904...
+  math.inf        -> Infinity
+  math.nan        -> NaN (Not a Number)
+
+Basic Operations:
+  math.floor(n)           -> Round down to nearest integer
+  math.ceil(n)            -> Round up to nearest integer
+  math.round(n)           -> Round to nearest integer
+  math.abs(n)             -> Absolute value
+  math.min(a, b)          -> Minimum of two numbers
+  math.max(a, b)          -> Maximum of two numbers
+  math.sign(n)            -> Returns -1, 0, or 1
+  math.clamp(val, min, max) -> Clamp value to range
+
+Power & Roots:
+  math.sqrt(n)            -> Square root
+  math.cbrt(n)            -> Cube root
+  math.pow(base, exp)     -> Base raised to exponent
+  math.hypot(x, y)        -> Hypotenuse: sqrt(x^2 + y^2)
+
+Logarithms & Exponentials:
+  math.log(n)             -> Natural logarithm (ln)
+  math.log10(n)           -> Base-10 logarithm
+  math.log2(n)            -> Base-2 logarithm
+  math.exp(n)             -> e raised to power n
+
+Trigonometry (radians):
+  math.sin(x)             -> Sine
+  math.cos(x)             -> Cosine
+  math.tan(x)             -> Tangent
+  math.asin(x)            -> Arc sine
+  math.acos(x)            -> Arc cosine
+  math.atan(x)            -> Arc tangent
+  math.atan2(y, x)        -> Two-argument arc tangent
+  math.sinh(x)            -> Hyperbolic sine
+  math.cosh(x)            -> Hyperbolic cosine
+  math.tanh(x)            -> Hyperbolic tangent
+
+Angle Conversion:
+  math.deg(radians)       -> Convert radians to degrees
+  math.rad(degrees)       -> Convert degrees to radians
+
+Random Numbers:
+  math.random()           -> Random float 0.0 to 1.0
+  math.randomint(min, max) -> Random integer in range [min, max)
+
+Floating Point:
+  math.fmod(x, y)         -> Floating-point remainder
+  math.trunc(n)           -> Truncate toward zero
+  math.fract(n)           -> Fractional part
+  math.isnan(n)           -> Check if NaN
+  math.isinf(n)           -> Check if infinite
+
+Interpolation:
+  math.lerp(a, b, t)      -> Linear interpolation
+  math.map(val, in_min, in_max, out_min, out_max) -> Map value to new range
+
+Number Theory:
+  math.gcd(a, b)          -> Greatest common divisor
+  math.lcm(a, b)          -> Least common multiple
+  math.factorial(n)       -> n! (factorial)
+  math.prime(n)           -> Check if n is prime
+  math.fibonacci(n)       -> nth Fibonacci number
+
+Statistics (take array):
+  math.sum(arr)           -> Sum of array elements
+  math.product(arr)       -> Product of array elements
+  math.mean(arr)          -> Arithmetic mean
+  math.median(arr)        -> Median value
+  math.variance(arr)      -> Population variance
+  math.stddev(arr)        -> Standard deviation
+
+================================================================================
+                                  STRING MODULE
+================================================================================
+
+Length & Access:
+  string.length(s)        -> Length of string
+  string.char(s, i)       -> Character at index i
+  string.byte(s, i)       -> ASCII code at index i
+  string.chars(s)         -> Array of characters
+
+Case Conversion:
+  string.upper(s)         -> Convert to uppercase
+  string.lower(s)         -> Convert to lowercase
+  string.capitalize(s)    -> Capitalize first letter
+  string.title(s)         -> Title case (capitalize each word)
+
+Trimming:
+  string.trim(s)          -> Remove whitespace from both ends
+  string.ltrim(s)         -> Remove leading whitespace
+  string.rtrim(s)         -> Remove trailing whitespace
+
+Padding:
+  string.pad_left(s, len, char)  -> Pad left to length
+  string.pad_right(s, len, char) -> Pad right to length
+  string.center(s, width, char)  -> Center string in width
+
+Substring Operations:
+  string.substring(s, start, end) -> Extract substring
+  string.insert(s, pos, str)      -> Insert string at position
+  string.remove(s, start, end)    -> Remove characters in range
+
+Search:
+  string.find(s, substr)          -> Index of first occurrence (-1 if not found)
+  string.contains(s, substr)      -> Check if contains substring
+  string.starts_with(s, prefix)   -> Check if starts with prefix
+  string.ends_with(s, suffix)     -> Check if ends with suffix
+  string.count(s, substr)         -> Count occurrences
+
+Replace:
+  string.replace(s, old, new)     -> Replace all occurrences
+  string.replace_first(s, old, new) -> Replace first occurrence
+
+Split & Join:
+  string.split(s, delim)          -> Split into array
+  string.lines(s)                 -> Split by newlines
+
+Transformation:
+  string.reverse(s)               -> Reverse string
+  string.repeat(s, n)             -> Repeat string n times
+  string.format(fmt, ...)         -> Format string (printf-style)
+  string.slug(s)                  -> Convert to URL slug
+  string.truncate(s, max, suffix) -> Truncate with suffix (default "...")
+  string.word_wrap(s, width)      -> Wrap text at width
+
+Validation:
+  string.is_empty(s)              -> Check if empty
+  string.is_numeric(s)            -> Check if all digits
+  string.is_alpha(s)              -> Check if all letters
+  string.is_alphanumeric(s)       -> Check if letters/digits
+  string.match(s, pattern)        -> Match regex pattern
+
+HTML:
+  string.escape_html(s)           -> Escape HTML entities
+  string.unescape_html(s)         -> Unescape HTML entities
+
+================================================================================
+                                  ARRAY MODULE
+================================================================================
+
+Length & Access:
+  array.length(arr)               -> Number of elements
+  array.first(arr)                -> First element
+  array.last(arr)                 -> Last element
+
+Modification:
+  array.push(arr, val)            -> Add to end (returns new array)
+  array.pop(arr)                  -> Remove from end (returns new array)
+  array.shift(arr)                -> Remove from start (returns new array)
+  array.unshift(arr, val)         -> Add to start (returns new array)
+  array.insert(arr, i, val)       -> Insert at index
+  array.remove_at(arr, i)         -> Remove at index
+  array.swap(arr, i, j)           -> Swap elements
+
+Slicing:
+  array.slice(arr, start, end)    -> Extract sub-array
+  array.take(arr, n)              -> First n elements
+  array.drop(arr, n)              -> All except first n
+  array.chunk(arr, size)          -> Split into chunks
+  array.partition(arr, i)         -> Split at index
+
+Combining:
+  array.concat(arr1, arr2)        -> Concatenate arrays
+  array.zip(arr1, arr2)           -> Zip two arrays
+  array.flatten(arr)              -> Flatten nested arrays
+  array.repeat(arr, n)            -> Repeat array n times
+
+Search:
+  array.contains(arr, val)        -> Check if contains value
+  array.find(arr, val)            -> Index of value (-1 if not found)
+  array.count(arr, val)           -> Count occurrences
+
+Transform:
+  array.reverse(arr)              -> Reverse order
+  array.sort(arr)                 -> Sort ascending
+  array.unique(arr)               -> Remove duplicates
+  array.filter_nil(arr)           -> Remove nil values
+  array.shuffle(arr)              -> Random order
+  array.rotate(arr, n)            -> Rotate by n positions
+  array.copy(arr)                 -> Shallow copy
+  array.clear(arr)                -> Empty array
+
+Random:
+  array.sample(arr, n)            -> Random n elements (default 1)
+
+Aggregation:
+  array.join(arr, sep)            -> Join with separator
+  array.min(arr)                  -> Minimum value
+  array.max(arr)                  -> Maximum value
+  array.sum(arr)                  -> Sum of values
+  array.avg(arr)                  -> Average of values
+
+Generation:
+  array.range(start, end, step)   -> Generate range
+  array.fill(val, n)              -> Array of n copies of val
+
+================================================================================
+                                    FS MODULE
+================================================================================
+
+Reading:
+  fs.read(path)                   -> Read file as string
+  fs.read_bytes(path)             -> Read as byte array
+  fs.read_lines(path)             -> Read as array of lines
+
+Writing:
+  fs.write(path, content)         -> Write string to file
+  fs.write_bytes(path, bytes)     -> Write byte array
+  fs.append(path, content)        -> Append to file
+  fs.touch(path)                  -> Create/update file
+
+File Info:
+  fs.exists(path)                 -> Check if exists
+  fs.isfile(path)                 -> Check if regular file
+  fs.isdir(path)                  -> Check if directory
+  fs.is_symlink(path)             -> Check if symbolic link
+  fs.filesize(path)               -> Size in bytes
+  fs.modified(path)               -> Modification timestamp
+  fs.created(path)                -> Creation timestamp
+  fs.stat(path)                   -> Complete file info (dict)
+
+Path Operations:
+  fs.basename(path)               -> File name
+  fs.dirname(path)                -> Directory name
+  fs.extension(path)              -> File extension
+  fs.join_path(a, b)              -> Join path components
+  fs.absolute(path)               -> Absolute path
+
+File Operations:
+  fs.copy(src, dst)               -> Copy file
+  fs.rename(old, new)             -> Rename/move file
+  fs.remove(path)                 -> Delete file or directory
+
+Directory:
+  fs.mkdir(path)                  -> Create directory
+  fs.readdir(path)                -> List directory contents
+  fs.glob(pattern)                -> Find files matching pattern
+  fs.walk(dir)                    -> Recursively list all files
+
+Temporary:
+  fs.temp_file(prefix)            -> Generate temp file path
+  fs.temp_dir()                   -> Get temp directory
+
+================================================================================
+                                    OS MODULE
+================================================================================
+
+System Info:
+  os.platform()                   -> Operating system name
+  os.arch()                       -> CPU architecture
+  os.version()                    -> OS version string
+  os.family()                     -> OS family (unix/windows)
+  os.hostname()                   -> Machine hostname
+  os.cpus()                       -> Number of CPU cores
+
+User Info:
+  os.user()                       -> Current username
+  os.home()                       -> Home directory
+
+Environment:
+  os.getenv(name)                 -> Get environment variable
+  os.setenv(name, val)            -> Set environment variable
+  os.unsetenv(name)               -> Remove environment variable
+  os.envvars()                    -> All environment variables (dict)
+
+Paths:
+  os.cwd()                        -> Current working directory
+  os.chdir(path)                  -> Change directory
+  os.tmpdir()                     -> Temporary directory
+
+Process:
+  os.pid()                        -> Process ID
+  os.args()                       -> Command line arguments
+  os.exit(code)                   -> Exit with code
+  os.execute(cmd)                 -> Execute command (returns output)
+  os.spawn(cmd)                   -> Spawn background process (returns PID)
+  os.shell()                      -> Default shell path
+  os.which(cmd)                   -> Find command in PATH
+
+Time:
+  os.time()                       -> Unix timestamp (seconds)
+  os.clock()                      -> High-precision clock
+  os.sleep(ms)                    -> Sleep milliseconds
+
+================================================================================
+                                   JSON MODULE
+================================================================================
+
+  json.parse(str)                 -> Parse JSON string to value
+  json.stringify(val)             -> Convert value to JSON
+  json.pretty(val)                -> Pretty-print JSON
+  json.valid(str)                 -> Check if valid JSON
+
+================================================================================
+                                   TYPE MODULE
+================================================================================
+
+Type Checking:
+  type.typeof(val)                -> Get type name
+  type.isnil(val)                 -> Check if nil
+  type.isnumber(val)              -> Check if number
+  type.isstring(val)              -> Check if string
+  type.isbool(val)                -> Check if boolean
+  type.isfunction(val)            -> Check if function
+  type.istable(val)               -> Check if table/array
+  type.isarray(val)               -> Check if array
+  type.isdict(val)                -> Check if dictionary
+  type.ismodule(val)              -> Check if module
+  type.isempty(val)               -> Check if empty
+
+Conversion:
+  type.tonumber(val)              -> Convert to number
+  type.tostring(val)              -> Convert to string
+  type.tobool(val)                -> Convert to boolean
+
+Utility:
+  type.default(val, def)          -> Return def if val is nil
+
+================================================================================
+                                  TABLE MODULE
+================================================================================
+
+  table.keys(dict)                -> Array of keys
+  table.values(dict)              -> Array of values
+  table.entries(dict)             -> Array of [key, value] pairs
+  table.has(dict, key)            -> Check if key exists
+  table.get(dict, key)            -> Get value by key
+  table.set(dict, key, val)       -> Set key-value pair
+  table.delete(dict, key)         -> Remove key
+  table.merge(dict1, dict2)       -> Merge dictionaries
+  table.size(dict)                -> Number of entries
+  table.copy(dict)                -> Shallow copy
+  table.clear(dict)               -> Empty dictionary
+  table.from_entries(arr)         -> Create from [key, value] pairs
+  table.invert(dict)              -> Swap keys and values
+
+================================================================================
+                                 BASE64 MODULE
+================================================================================
+
+  base64.encode(str)              -> Encode string to Base64
+  base64.decode(str)              -> Decode Base64 to string
+
+================================================================================
+                                DATETIME MODULE
+================================================================================
+
+Current Time:
+  datetime.now()                  -> Current local datetime string
+  datetime.timestamp()            -> Current Unix timestamp
+
+Parsing & Formatting:
+  datetime.format(ts, fmt)        -> Format timestamp with pattern
+  datetime.parse(str, fmt)        -> Parse string to timestamp
+
+Components (from timestamp):
+  datetime.year(ts)               -> Year
+  datetime.month(ts)              -> Month (1-12)
+  datetime.day(ts)                -> Day (1-31)
+  datetime.hour(ts)               -> Hour (0-23)
+  datetime.minute(ts)             -> Minute (0-59)
+  datetime.second(ts)             -> Second (0-59)
+  datetime.weekday(ts)            -> Day of week (0=Mon, 6=Sun)
+  datetime.day_of_year(ts)        -> Day of year (1-366)
+
+Calculation:
+  datetime.add_days(ts, n)        -> Add days
+  datetime.add_hours(ts, n)       -> Add hours
+  datetime.add_minutes(ts, n)     -> Add minutes
+  datetime.add_seconds(ts, n)     -> Add seconds
+  datetime.diff(ts1, ts2)         -> Difference in seconds
+
+Utility:
+  datetime.is_leap_year(year)     -> Check if leap year
+  datetime.from_timestamp(ts)     -> Convert timestamp to datetime string
+
+================================================================================
+                                  REGEX MODULE
+================================================================================
+
+  regex.match(text, pattern)      -> Check if matches
+  regex.find(text, pattern)       -> First match position
+  regex.find_all(text, pattern)   -> All match positions
+  regex.replace(text, pat, repl)  -> Replace first match
+  regex.replace_all(text, pat, repl) -> Replace all matches
+  regex.split(text, pattern)      -> Split by pattern
+  regex.captures(text, pattern)   -> Extract capture groups
+  regex.escape(str)               -> Escape special characters
+  regex.is_valid(pattern)         -> Validate regex pattern
+
+================================================================================
+                                 CRYPTO MODULE
+================================================================================
+
+Hashing:
+  crypto.md5(str)                 -> MD5 hash
+  crypto.sha1(str)                -> SHA-1 hash
+  crypto.sha256(str)              -> SHA-256 hash
+  crypto.sha512(str)              -> SHA-512 hash
+  crypto.hash(str, alg)           -> Hash with algorithm name
+
+HMAC:
+  crypto.hmac_sha256(data, key)   -> HMAC-SHA256
+
+UUID:
+  crypto.uuid()                   -> Generate UUID v4
+  crypto.uuid_v4()                -> Generate UUID v4 (alias)
+
+Random:
+  crypto.random_bytes(n)          -> Array of random bytes
+  crypto.random_hex(n)            -> Random hex string of length n
+
+================================================================================
+                                   HTTP MODULE
+================================================================================
+
+Simple Requests:
+  http.get(url)                   -> GET request (returns body)
+  http.post(url, body)            -> POST request
+  http.put(url, body)             -> PUT request
+  http.delete(url)                -> DELETE request
+  http.patch(url, body)           -> PATCH request
+  http.head(url)                  -> HEAD request (headers dict)
+
+Advanced:
+  http.request(opts)              -> Custom request with options
+    opts = {
+      url = "...",
+      method = "GET",
+      headers = { ... },
+      body = "..."
+    }
+    Returns dict with: status, headers, body
+
+Download:
+  http.download(url, path)        -> Download file to path
+
+================================================================================
+                                   CSV MODULE
+================================================================================
+
+  csv.parse(str)                  -> Parse CSV to array of arrays
+  csv.stringify(arr)              -> Convert array to CSV string
+  csv.read(path)                  -> Read CSV file
+  csv.write(path, arr)            -> Write CSV file
+  csv.parse_row(str)              -> Parse single CSV row
+  csv.stringify_row(arr)          -> Convert array to CSV row
+
+================================================================================
+                                  PATH MODULE
+================================================================================
+
+Building Paths:
+  path.join(a, b, ...)            -> Join path components
+  path.normalize(p)               -> Normalize path
+  path.resolve(base, p)           -> Resolve relative path
+  path.relative(from, to)         -> Get relative path
+
+Path Components:
+  path.basename(p)                -> File name
+  path.dirname(p)                 -> Directory name
+  path.extname(p)                 -> Extension (.txt)
+  path.stem(p)                    -> Name without extension
+  path.split(p)                   -> Array of components
+
+Path Info:
+  path.is_absolute(p)             -> Check if absolute
+  path.is_relative(p)             -> Check if relative
+
+Modification:
+  path.with_extension(p, ext)     -> Change extension
+
+Platform:
+  path.separator()                -> Path separator (/ or \)
+
+================================================================================
+                                 ASSERT MODULE
+================================================================================
+
+  assert.equal(a, b)              -> Assert a == b
+  assert.not_equal(a, b)          -> Assert a != b
+  assert.true(val)                -> Assert val is true
+  assert.false(val)               -> Assert val is false
+  assert.nil(val)                 -> Assert val is nil
+  assert.not_nil(val)             -> Assert val is not nil
+  assert.type(val, t)             -> Assert type of val
+  assert.greater(a, b)            -> Assert a > b
+  assert.less(a, b)               -> Assert a < b
+  assert.contains(arr, val)       -> Assert array contains value
+  assert.matches(str, pattern)    -> Assert string matches regex
+  assert.fail(msg)                -> Force assertion failure
+
+================================================================================
+                                   SET MODULE
+================================================================================
+
+Creation:
+  set.new()                       -> Create empty set
+  set.from_array(arr)             -> Create set from array
+
+Modification:
+  set.add(s, val)                 -> Add value
+  set.remove(s, val)              -> Remove value
+  set.clear(s)                    -> Clear all values
+
+Query:
+  set.has(s, val)                 -> Check membership
+  set.size(s)                     -> Number of elements
+
+Set Operations:
+  set.union(s1, s2)               -> Union of sets
+  set.intersection(s1, s2)        -> Intersection of sets
+  set.difference(s1, s2)          -> Difference (s1 - s2)
+  set.symmetric_difference(s1, s2) -> Symmetric difference
+  set.is_subset(s1, s2)           -> Check if s1 is subset of s2
+  set.is_superset(s1, s2)         -> Check if s1 is superset of s2
+
+Conversion:
+  set.to_array(s)                 -> Convert to array
+
+================================================================================
+                                    IO MODULE
+================================================================================
+
+Output:
+  io.print(...)                   -> Print without newline
+  io.println(...)                 -> Print with newline
+  io.eprint(...)                  -> Print to stderr
+  io.eprintln(...)                -> Print to stderr with newline
+  io.flush()                      -> Flush stdout
+
+Input:
+  io.read_line()                  -> Read line from stdin
+  io.read_all()                   -> Read all stdin
+  io.input(prompt)                -> Print prompt, read line
+
+================================================================================
+                                   LOG MODULE
+================================================================================
+
+Logging (prints with level prefix):
+  log.trace(msg)                  -> [TRACE] message
+  log.debug(msg)                  -> [DEBUG] message
+  log.info(msg)                   -> [INFO] message
+  log.warn(msg)                   -> [WARN] message
+  log.error(msg)                  -> [ERROR] message
+  log.fatal(msg)                  -> [FATAL] message (exits)
+
+Configuration:
+  log.level(n)                    -> Set minimum log level (0-5)
+                                     0=trace, 1=debug, 2=info,
+                                     3=warn, 4=error, 5=fatal
+
+================================================================================
+                                   URL MODULE
+================================================================================
+
+Parsing:
+  url.parse(str)                  -> Parse URL to dict with:
+                                     scheme, host, port, path,
+                                     query, fragment
+  url.format(dict)                -> Build URL from dict
+  url.is_valid(str)               -> Check if valid URL
+
+Encoding:
+  url.encode(str)                 -> URL encode string
+  url.decode(str)                 -> URL decode string
+  url.encode_component(str)       -> Encode URL component
+  url.decode_component(str)       -> Decode URL component
+
+Query Strings:
+  url.query_parse(str)            -> Parse query string to dict
+  url.query_stringify(dict)       -> Dict to query string
+
+Utility:
+  url.join(base, path)            -> Join URL with path
+
+================================================================================
+                                    EXAMPLES
+================================================================================
+
+-- Math operations
+let radius = 5
+let area = math.pi * math.pow(radius, 2)
+print("Area: " .. area)
+
+-- String manipulation
+let name = "  Hello World  "
+let clean = string.trim(name)
+let slug = string.slug(clean)  -- "hello-world"
+
+-- Array operations
+let numbers = [1, 2, 3, 4, 5]
+let doubled = []
+for i, n in numbers do
+    array.push(doubled, n * 2)
+end
+let shuffled = array.shuffle(numbers)
+
+-- File operations
+let content = fs.read("config.json")
+let config = json.parse(content)
+fs.write("output.txt", "Result: " .. config.value)
+
+-- HTTP request
+let response = http.get("https://api.example.com/data")
+let data = json.parse(response)
+
+-- Working with dictionaries
+let person = { name = "Alice", age = 30 }
+let keys = table.keys(person)
+let has_name = table.has(person, "name")
+
+-- Cryptographic operations
+let hash = crypto.sha256("password123")
+let id = crypto.uuid()
+
+-- Date/time
+let now = datetime.now()
+let year = datetime.year(datetime.timestamp())
+
+-- Regex
+let is_email = regex.match("test@example.com", "^[^@]+@[^@]+\\.[^@]+$")
+let parts = regex.split("a,b,,c", ",+")
+
+-- Logging
+log.level(1)  -- debug and above
+log.info("Starting application...")
+log.error("Something went wrong!")
+
+================================================================================
