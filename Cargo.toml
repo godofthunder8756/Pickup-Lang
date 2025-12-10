@@ -33,3 +33,24 @@ regex = "1.10"
 base64 = "0.21"
 # Date/time support
 chrono = "0.4"
+# Cryptographic hashing
+sha2 = "0.10"
+md-5 = "0.10"
+sha1 = "0.10"
+hmac = "0.12"
+# UUID generation
+uuid = { version = "1.6", features = ["v4"] }
+# Random number generation
+rand = "0.8"
+# HTTP client
+ureq = { version = "2.9", features = ["json"] }
+# CSV parsing
+csv = "1.3"
+# File globbing
+glob = "0.3"
+# Directory walking
+walkdir = "2.4"
+# URL parsing
+url = "2.5"
+# URL encoding
+percent-encoding = "2.3"
