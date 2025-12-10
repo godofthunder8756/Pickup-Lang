@@ -108,6 +108,13 @@ fn create_fs_module() -> Value {
     fs_funcs.insert("is_symlink".to_string(), Value::NativeFunction("fs".to_string(), "is_symlink".to_string()));
     fs_funcs.insert("read_bytes".to_string(), Value::NativeFunction("fs".to_string(), "read_bytes".to_string()));
     fs_funcs.insert("write_bytes".to_string(), Value::NativeFunction("fs".to_string(), "write_bytes".to_string()));
+    fs_funcs.insert("glob".to_string(), Value::NativeFunction("fs".to_string(), "glob".to_string()));
+    fs_funcs.insert("walk".to_string(), Value::NativeFunction("fs".to_string(), "walk".to_string()));
+    fs_funcs.insert("stat".to_string(), Value::NativeFunction("fs".to_string(), "stat".to_string()));
+    fs_funcs.insert("temp_file".to_string(), Value::NativeFunction("fs".to_string(), "temp_file".to_string()));
+    fs_funcs.insert("temp_dir".to_string(), Value::NativeFunction("fs".to_string(), "temp_dir".to_string()));
+    fs_funcs.insert("read_lines".to_string(), Value::NativeFunction("fs".to_string(), "read_lines".to_string()));
+    fs_funcs.insert("touch".to_string(), Value::NativeFunction("fs".to_string(), "touch".to_string()));
 
     Value::Module(fs_funcs)
 }
@@ -150,6 +157,12 @@ fn create_string_module() -> Value {
     string_funcs.insert("replace_first".to_string(), Value::NativeFunction("string".to_string(), "replace_first".to_string()));
     string_funcs.insert("insert".to_string(), Value::NativeFunction("string".to_string(), "insert".to_string()));
     string_funcs.insert("remove".to_string(), Value::NativeFunction("string".to_string(), "remove".to_string()));
+    string_funcs.insert("slug".to_string(), Value::NativeFunction("string".to_string(), "slug".to_string()));
+    string_funcs.insert("truncate".to_string(), Value::NativeFunction("string".to_string(), "truncate".to_string()));
+    string_funcs.insert("word_wrap".to_string(), Value::NativeFunction("string".to_string(), "word_wrap".to_string()));
+    string_funcs.insert("center".to_string(), Value::NativeFunction("string".to_string(), "center".to_string()));
+    string_funcs.insert("escape_html".to_string(), Value::NativeFunction("string".to_string(), "escape_html".to_string()));
+    string_funcs.insert("unescape_html".to_string(), Value::NativeFunction("string".to_string(), "unescape_html".to_string()));
 
     Value::Module(string_funcs)
 }
@@ -202,6 +215,18 @@ fn create_math_module() -> Value {
     math_funcs.insert("trunc".to_string(), Value::NativeFunction("math".to_string(), "trunc".to_string()));
     math_funcs.insert("fract".to_string(), Value::NativeFunction("math".to_string(), "fract".to_string()));
     math_funcs.insert("cbrt".to_string(), Value::NativeFunction("math".to_string(), "cbrt".to_string()));
+    math_funcs.insert("gcd".to_string(), Value::NativeFunction("math".to_string(), "gcd".to_string()));
+    math_funcs.insert("lcm".to_string(), Value::NativeFunction("math".to_string(), "lcm".to_string()));
+    math_funcs.insert("factorial".to_string(), Value::NativeFunction("math".to_string(), "factorial".to_string()));
+    math_funcs.insert("sum".to_string(), Value::NativeFunction("math".to_string(), "sum".to_string()));
+    math_funcs.insert("product".to_string(), Value::NativeFunction("math".to_string(), "product".to_string()));
+    math_funcs.insert("mean".to_string(), Value::NativeFunction("math".to_string(), "mean".to_string()));
+    math_funcs.insert("median".to_string(), Value::NativeFunction("math".to_string(), "median".to_string()));
+    math_funcs.insert("variance".to_string(), Value::NativeFunction("math".to_string(), "variance".to_string()));
+    math_funcs.insert("stddev".to_string(), Value::NativeFunction("math".to_string(), "stddev".to_string()));
+    math_funcs.insert("prime".to_string(), Value::NativeFunction("math".to_string(), "prime".to_string()));
+    math_funcs.insert("fibonacci".to_string(), Value::NativeFunction("math".to_string(), "fibonacci".to_string()));
+    math_funcs.insert("map".to_string(), Value::NativeFunction("math".to_string(), "map".to_string()));
 
     Value::Module(math_funcs)
 }
@@ -241,6 +266,14 @@ fn create_array_module() -> Value {
     array_funcs.insert("copy".to_string(), Value::NativeFunction("array".to_string(), "copy".to_string()));
     array_funcs.insert("clear".to_string(), Value::NativeFunction("array".to_string(), "clear".to_string()));
     array_funcs.insert("swap".to_string(), Value::NativeFunction("array".to_string(), "swap".to_string()));
+    array_funcs.insert("shuffle".to_string(), Value::NativeFunction("array".to_string(), "shuffle".to_string()));
+    array_funcs.insert("sample".to_string(), Value::NativeFunction("array".to_string(), "sample".to_string()));
+    array_funcs.insert("chunk".to_string(), Value::NativeFunction("array".to_string(), "chunk".to_string()));
+    array_funcs.insert("partition".to_string(), Value::NativeFunction("array".to_string(), "partition".to_string()));
+    array_funcs.insert("rotate".to_string(), Value::NativeFunction("array".to_string(), "rotate".to_string()));
+    array_funcs.insert("take".to_string(), Value::NativeFunction("array".to_string(), "take".to_string()));
+    array_funcs.insert("drop".to_string(), Value::NativeFunction("array".to_string(), "drop".to_string()));
+    array_funcs.insert("repeat".to_string(), Value::NativeFunction("array".to_string(), "repeat".to_string()));
 
     Value::Module(array_funcs)
 }
@@ -294,6 +327,12 @@ fn create_os_module() -> Value {
     os_funcs.insert("pid".to_string(), Value::NativeFunction("os".to_string(), "pid".to_string()));
     os_funcs.insert("args".to_string(), Value::NativeFunction("os".to_string(), "args".to_string()));
     os_funcs.insert("user".to_string(), Value::NativeFunction("os".to_string(), "user".to_string()));
+    os_funcs.insert("cpus".to_string(), Value::NativeFunction("os".to_string(), "cpus".to_string()));
+    os_funcs.insert("version".to_string(), Value::NativeFunction("os".to_string(), "version".to_string()));
+    os_funcs.insert("family".to_string(), Value::NativeFunction("os".to_string(), "family".to_string()));
+    os_funcs.insert("shell".to_string(), Value::NativeFunction("os".to_string(), "shell".to_string()));
+    os_funcs.insert("spawn".to_string(), Value::NativeFunction("os".to_string(), "spawn".to_string()));
+    os_funcs.insert("which".to_string(), Value::NativeFunction("os".to_string(), "which".to_string()));
 
     Value::Module(os_funcs)
 }
@@ -856,6 +895,218 @@ fn call_math(func: &str, args: Vec<Value>) -> Value {
                 Value::Nil
             }
         }
+        "gcd" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Number(a)), Some(Value::Number(b))) = (args.get(0), args.get(1)) {
+                    let mut a = a.abs() as u64;
+                    let mut b = b.abs() as u64;
+                    while b != 0 {
+                        let t = b;
+                        b = a % b;
+                        a = t;
+                    }
+                    Value::Number(a as f64)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "lcm" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Number(a)), Some(Value::Number(b))) = (args.get(0), args.get(1)) {
+                    let a_abs = a.abs() as u64;
+                    let b_abs = b.abs() as u64;
+                    if a_abs == 0 || b_abs == 0 {
+                        Value::Number(0.0)
+                    } else {
+                        // Calculate GCD first
+                        let mut x = a_abs;
+                        let mut y = b_abs;
+                        while y != 0 {
+                            let t = y;
+                            y = x % y;
+                            x = t;
+                        }
+                        let gcd = x;
+                        Value::Number((a_abs / gcd * b_abs) as f64)
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "factorial" => {
+            if let Some(Value::Number(n)) = args.first() {
+                let n = *n as u64;
+                if n > 20 {
+                    Value::Number(f64::INFINITY) // Overflow protection
+                } else {
+                    let mut result: u64 = 1;
+                    for i in 2..=n {
+                        result *= i;
+                    }
+                    Value::Number(result as f64)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "sum" => {
+            if let Some(Value::Table(arr)) = args.first() {
+                let sum: f64 = arr.iter()
+                    .filter_map(|v| if let Value::Number(n) = v { Some(*n) } else { None })
+                    .sum();
+                Value::Number(sum)
+            } else {
+                Value::Nil
+            }
+        }
+        "product" => {
+            if let Some(Value::Table(arr)) = args.first() {
+                let product: f64 = arr.iter()
+                    .filter_map(|v| if let Value::Number(n) = v { Some(*n) } else { None })
+                    .product();
+                Value::Number(product)
+            } else {
+                Value::Nil
+            }
+        }
+        "mean" => {
+            if let Some(Value::Table(arr)) = args.first() {
+                let numbers: Vec<f64> = arr.iter()
+                    .filter_map(|v| if let Value::Number(n) = v { Some(*n) } else { None })
+                    .collect();
+                if numbers.is_empty() {
+                    Value::Nil
+                } else {
+                    let sum: f64 = numbers.iter().sum();
+                    Value::Number(sum / numbers.len() as f64)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "median" => {
+            if let Some(Value::Table(arr)) = args.first() {
+                let mut numbers: Vec<f64> = arr.iter()
+                    .filter_map(|v| if let Value::Number(n) = v { Some(*n) } else { None })
+                    .collect();
+                if numbers.is_empty() {
+                    Value::Nil
+                } else {
+                    numbers.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    let mid = numbers.len() / 2;
+                    if numbers.len() % 2 == 0 {
+                        Value::Number((numbers[mid - 1] + numbers[mid]) / 2.0)
+                    } else {
+                        Value::Number(numbers[mid])
+                    }
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "variance" => {
+            if let Some(Value::Table(arr)) = args.first() {
+                let numbers: Vec<f64> = arr.iter()
+                    .filter_map(|v| if let Value::Number(n) = v { Some(*n) } else { None })
+                    .collect();
+                if numbers.is_empty() {
+                    Value::Nil
+                } else {
+                    let mean: f64 = numbers.iter().sum::<f64>() / numbers.len() as f64;
+                    let variance = numbers.iter()
+                        .map(|x| (x - mean).powi(2))
+                        .sum::<f64>() / numbers.len() as f64;
+                    Value::Number(variance)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "stddev" => {
+            if let Some(Value::Table(arr)) = args.first() {
+                let numbers: Vec<f64> = arr.iter()
+                    .filter_map(|v| if let Value::Number(n) = v { Some(*n) } else { None })
+                    .collect();
+                if numbers.is_empty() {
+                    Value::Nil
+                } else {
+                    let mean: f64 = numbers.iter().sum::<f64>() / numbers.len() as f64;
+                    let variance = numbers.iter()
+                        .map(|x| (x - mean).powi(2))
+                        .sum::<f64>() / numbers.len() as f64;
+                    Value::Number(variance.sqrt())
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "prime" => {
+            if let Some(Value::Number(n)) = args.first() {
+                let n = *n as u64;
+                if n < 2 {
+                    Value::Boolean(false)
+                } else if n == 2 {
+                    Value::Boolean(true)
+                } else if n % 2 == 0 {
+                    Value::Boolean(false)
+                } else {
+                    let sqrt_n = (n as f64).sqrt() as u64;
+                    let mut is_prime = true;
+                    for i in (3..=sqrt_n).step_by(2) {
+                        if n % i == 0 {
+                            is_prime = false;
+                            break;
+                        }
+                    }
+                    Value::Boolean(is_prime)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "fibonacci" => {
+            if let Some(Value::Number(n)) = args.first() {
+                let n = *n as usize;
+                if n == 0 {
+                    Value::Number(0.0)
+                } else if n == 1 {
+                    Value::Number(1.0)
+                } else {
+                    let mut a: u64 = 0;
+                    let mut b: u64 = 1;
+                    for _ in 2..=n {
+                        let temp = a + b;
+                        a = b;
+                        b = temp;
+                    }
+                    Value::Number(b as f64)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "map" => {
+            // Map a value from one range to another: map(value, in_min, in_max, out_min, out_max)
+            if args.len() >= 5 {
+                if let (Some(Value::Number(v)), Some(Value::Number(in_min)), Some(Value::Number(in_max)),
+                        Some(Value::Number(out_min)), Some(Value::Number(out_max))) =
+                    (args.get(0), args.get(1), args.get(2), args.get(3), args.get(4))
+                {
+                    let result = (v - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+                    Value::Number(result)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
         _ => Value::Nil,
     }
 }
@@ -1250,6 +1501,122 @@ fn call_string(func: &str, args: Vec<Value>) -> Value {
                 } else {
                     Value::Nil
                 }
+            } else {
+                Value::Nil
+            }
+        }
+        "slug" => {
+            if let Some(Value::String(s)) = args.first() {
+                let slug: String = s.to_lowercase()
+                    .chars()
+                    .map(|c| if c.is_alphanumeric() || c == ' ' || c == '-' { c } else { ' ' })
+                    .collect::<String>()
+                    .split_whitespace()
+                    .collect::<Vec<_>>()
+                    .join("-");
+                Value::String(slug)
+            } else {
+                Value::Nil
+            }
+        }
+        "truncate" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(s)), Some(Value::Number(max_len))) = (args.get(0), args.get(1)) {
+                    let max_len = *max_len as usize;
+                    let suffix = args.get(2)
+                        .and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                        .unwrap_or("...");
+                    if s.len() <= max_len {
+                        Value::String(s.clone())
+                    } else if max_len <= suffix.len() {
+                        Value::String(suffix[..max_len].to_string())
+                    } else {
+                        let end = max_len - suffix.len();
+                        Value::String(format!("{}{}", &s[..end], suffix))
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "word_wrap" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(s)), Some(Value::Number(width))) = (args.get(0), args.get(1)) {
+                    let width = *width as usize;
+                    let mut result = String::new();
+                    let mut line_len = 0;
+                    for word in s.split_whitespace() {
+                        let word_len = word.len();
+                        if line_len + word_len > width && line_len > 0 {
+                            result.push('\n');
+                            line_len = 0;
+                        }
+                        if line_len > 0 {
+                            result.push(' ');
+                            line_len += 1;
+                        }
+                        result.push_str(word);
+                        line_len += word_len;
+                    }
+                    Value::String(result)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "center" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(s)), Some(Value::Number(width))) = (args.get(0), args.get(1)) {
+                    let width = *width as usize;
+                    let fill = args.get(2)
+                        .and_then(|v| if let Value::String(s) = v { s.chars().next() } else { None })
+                        .unwrap_or(' ');
+                    if s.len() >= width {
+                        Value::String(s.clone())
+                    } else {
+                        let padding = width - s.len();
+                        let left = padding / 2;
+                        let right = padding - left;
+                        Value::String(format!(
+                            "{}{}{}",
+                            fill.to_string().repeat(left),
+                            s,
+                            fill.to_string().repeat(right)
+                        ))
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "escape_html" => {
+            if let Some(Value::String(s)) = args.first() {
+                let escaped = s
+                    .replace('&', "&amp;")
+                    .replace('<', "&lt;")
+                    .replace('>', "&gt;")
+                    .replace('"', "&quot;")
+                    .replace('\'', "&#39;");
+                Value::String(escaped)
+            } else {
+                Value::Nil
+            }
+        }
+        "unescape_html" => {
+            if let Some(Value::String(s)) = args.first() {
+                let unescaped = s
+                    .replace("&amp;", "&")
+                    .replace("&lt;", "<")
+                    .replace("&gt;", ">")
+                    .replace("&quot;", "\"")
+                    .replace("&#39;", "'");
+                Value::String(unescaped)
             } else {
                 Value::Nil
             }
@@ -1657,6 +2024,135 @@ fn call_array(func: &str, args: Vec<Value>) -> Value {
                 Value::Nil
             }
         }
+        "shuffle" => {
+            use rand::seq::SliceRandom;
+            if let Some(Value::Table(arr)) = args.first() {
+                let mut result = arr.clone();
+                let mut rng = rand::thread_rng();
+                result.shuffle(&mut rng);
+                Value::Table(result)
+            } else {
+                Value::Nil
+            }
+        }
+        "sample" => {
+            use rand::seq::SliceRandom;
+            if let Some(Value::Table(arr)) = args.first() {
+                let count = args.get(1)
+                    .and_then(|v| if let Value::Number(n) = v { Some(*n as usize) } else { None })
+                    .unwrap_or(1);
+                let mut rng = rand::thread_rng();
+                let sampled: Vec<Value> = arr.choose_multiple(&mut rng, count.min(arr.len()))
+                    .cloned()
+                    .collect();
+                if count == 1 && sampled.len() == 1 {
+                    sampled.into_iter().next().unwrap_or(Value::Nil)
+                } else {
+                    Value::Table(sampled)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "chunk" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr)), Some(Value::Number(size))) = (args.get(0), args.get(1)) {
+                    let size = *size as usize;
+                    if size == 0 {
+                        Value::Nil
+                    } else {
+                        let chunks: Vec<Value> = arr.chunks(size)
+                            .map(|chunk| Value::Table(chunk.to_vec()))
+                            .collect();
+                        Value::Table(chunks)
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "partition" => {
+            // Partition array at given index: partition(arr, index) -> [left, right]
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr)), Some(Value::Number(idx))) = (args.get(0), args.get(1)) {
+                    let idx = (*idx as usize).min(arr.len());
+                    let (left, right) = arr.split_at(idx);
+                    Value::Table(vec![
+                        Value::Table(left.to_vec()),
+                        Value::Table(right.to_vec())
+                    ])
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "rotate" => {
+            // Rotate array by n positions (positive = left, negative = right)
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr)), Some(Value::Number(n))) = (args.get(0), args.get(1)) {
+                    if arr.is_empty() {
+                        Value::Table(arr.clone())
+                    } else {
+                        let len = arr.len();
+                        let n = (*n as i64).rem_euclid(len as i64) as usize;
+                        let mut result = arr.clone();
+                        result.rotate_left(n);
+                        Value::Table(result)
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "take" => {
+            // Take first n elements
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr)), Some(Value::Number(n))) = (args.get(0), args.get(1)) {
+                    let n = (*n as usize).min(arr.len());
+                    Value::Table(arr[..n].to_vec())
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "drop" => {
+            // Drop first n elements
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr)), Some(Value::Number(n))) = (args.get(0), args.get(1)) {
+                    let n = (*n as usize).min(arr.len());
+                    Value::Table(arr[n..].to_vec())
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "repeat" => {
+            // Repeat array n times
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr)), Some(Value::Number(n))) = (args.get(0), args.get(1)) {
+                    let n = *n as usize;
+                    let mut result = Vec::with_capacity(arr.len() * n);
+                    for _ in 0..n {
+                        result.extend(arr.iter().cloned());
+                    }
+                    Value::Table(result)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
         _ => Value::Nil,
     }
 }
@@ -1931,6 +2427,116 @@ fn call_fs(func: &str, args: Vec<Value>) -> Value {
                     }
                 } else {
                     Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "glob" => {
+            if let Some(Value::String(pattern)) = args.first() {
+                match glob::glob(pattern) {
+                    Ok(paths) => {
+                        let result: Vec<Value> = paths
+                            .filter_map(|p| p.ok())
+                            .map(|p| Value::String(p.to_string_lossy().to_string()))
+                            .collect();
+                        Value::Table(result)
+                    }
+                    Err(_) => Value::Table(vec![]),
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "walk" => {
+            if let Some(Value::String(dir)) = args.first() {
+                let mut result = Vec::new();
+                for entry in walkdir::WalkDir::new(dir)
+                    .into_iter()
+                    .filter_map(|e| e.ok())
+                {
+                    result.push(Value::String(entry.path().to_string_lossy().to_string()));
+                }
+                Value::Table(result)
+            } else {
+                Value::Nil
+            }
+        }
+        "stat" => {
+            if let Some(Value::String(path)) = args.first() {
+                match fs::metadata(path) {
+                    Ok(meta) => {
+                        let mut stat_dict = HashMap::new();
+                        stat_dict.insert("size".to_string(), Value::Number(meta.len() as f64));
+                        stat_dict.insert("is_dir".to_string(), Value::Boolean(meta.is_dir()));
+                        stat_dict.insert("is_file".to_string(), Value::Boolean(meta.is_file()));
+                        stat_dict.insert("is_symlink".to_string(), Value::Boolean(meta.is_symlink()));
+                        stat_dict.insert("readonly".to_string(), Value::Boolean(meta.permissions().readonly()));
+                        if let Ok(modified) = meta.modified() {
+                            if let Ok(dur) = modified.duration_since(std::time::UNIX_EPOCH) {
+                                stat_dict.insert("modified".to_string(), Value::Number(dur.as_secs() as f64));
+                            }
+                        }
+                        if let Ok(created) = meta.created() {
+                            if let Ok(dur) = created.duration_since(std::time::UNIX_EPOCH) {
+                                stat_dict.insert("created".to_string(), Value::Number(dur.as_secs() as f64));
+                            }
+                        }
+                        Value::Dictionary(stat_dict)
+                    }
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "temp_file" => {
+            let prefix = args.first()
+                .and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                .unwrap_or("pickup_");
+            let temp_dir = std::env::temp_dir();
+            let filename = format!("{}{}", prefix, uuid::Uuid::new_v4());
+            let path = temp_dir.join(filename);
+            Value::String(path.to_string_lossy().to_string())
+        }
+        "temp_dir" => {
+            Value::String(std::env::temp_dir().to_string_lossy().to_string())
+        }
+        "read_lines" => {
+            if let Some(Value::String(path)) = args.first() {
+                match fs::read_to_string(path) {
+                    Ok(content) => {
+                        let lines: Vec<Value> = content.lines()
+                            .map(|l| Value::String(l.to_string()))
+                            .collect();
+                        Value::Table(lines)
+                    }
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "touch" => {
+            if let Some(Value::String(path)) = args.first() {
+                let path = std::path::Path::new(path);
+                if path.exists() {
+                    // Update modification time
+                    match fs::OpenOptions::new().write(true).open(path) {
+                        Ok(file) => {
+                            match file.set_len(file.metadata().map(|m| m.len()).unwrap_or(0)) {
+                                Ok(_) => Value::Boolean(true),
+                                Err(_) => Value::Boolean(false),
+                            }
+                        }
+                        Err(_) => Value::Boolean(false),
+                    }
+                } else {
+                    // Create the file
+                    match fs::File::create(path) {
+                        Ok(_) => Value::Boolean(true),
+                        Err(_) => Value::Boolean(false),
+                    }
                 }
             } else {
                 Value::Nil
@@ -2306,6 +2912,75 @@ fn call_os(func: &str, args: Vec<Value>) -> Value {
             match std::env::var("USER").or_else(|_| std::env::var("USERNAME")) {
                 Ok(user) => Value::String(user),
                 Err(_) => Value::Nil,
+            }
+        }
+        "cpus" => {
+            Value::Number(std::thread::available_parallelism()
+                .map(|p| p.get() as f64)
+                .unwrap_or(1.0))
+        }
+        "version" => {
+            Value::String(std::env::consts::OS.to_string())
+        }
+        "family" => {
+            Value::String(std::env::consts::FAMILY.to_string())
+        }
+        "shell" => {
+            let shell = if cfg!(target_os = "windows") {
+                std::env::var("COMSPEC").unwrap_or_else(|_| "cmd.exe".to_string())
+            } else {
+                std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string())
+            };
+            Value::String(shell)
+        }
+        "spawn" => {
+            // Spawn a process in background
+            if let Some(Value::String(cmd)) = args.first() {
+                use std::process::Command;
+                let args_vec: Vec<String> = args.iter().skip(1)
+                    .filter_map(|v| if let Value::String(s) = v { Some(s.clone()) } else { None })
+                    .collect();
+
+                let result = if cfg!(target_os = "windows") {
+                    Command::new("cmd")
+                        .args(["/C", cmd])
+                        .args(&args_vec)
+                        .spawn()
+                } else {
+                    Command::new("sh")
+                        .args(["-c", cmd])
+                        .args(&args_vec)
+                        .spawn()
+                };
+
+                match result {
+                    Ok(child) => Value::Number(child.id() as f64),
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "which" => {
+            if let Some(Value::String(cmd)) = args.first() {
+                let path_var = std::env::var("PATH").unwrap_or_default();
+                let separator = if cfg!(target_os = "windows") { ";" } else { ":" };
+                for path in path_var.split(separator) {
+                    let full_path = std::path::Path::new(path).join(cmd);
+                    if full_path.exists() {
+                        return Value::String(full_path.to_string_lossy().to_string());
+                    }
+                    // On Windows, try with .exe extension
+                    if cfg!(target_os = "windows") {
+                        let exe_path = std::path::Path::new(path).join(format!("{}.exe", cmd));
+                        if exe_path.exists() {
+                            return Value::String(exe_path.to_string_lossy().to_string());
+                        }
+                    }
+                }
+                Value::Nil
+            } else {
+                Value::Nil
             }
         }
         _ => Value::Nil,
