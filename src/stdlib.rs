@@ -1,7 +1,7 @@
 use crate::compiler::Value;
 use std::collections::HashMap;
 use std::fs;
-use std::io::Write;
+use std::io::{Write, Read};
 
 /// Initialize standard library modules
 pub fn create_stdlib() -> HashMap<String, Value> {
@@ -36,6 +36,36 @@ pub fn create_stdlib() -> HashMap<String, Value> {
 
     // DateTime module
     stdlib.insert("datetime".to_string(), create_datetime_module());
+
+    // Regex module
+    stdlib.insert("regex".to_string(), create_regex_module());
+
+    // Crypto module
+    stdlib.insert("crypto".to_string(), create_crypto_module());
+
+    // HTTP module
+    stdlib.insert("http".to_string(), create_http_module());
+
+    // CSV module
+    stdlib.insert("csv".to_string(), create_csv_module());
+
+    // Path module
+    stdlib.insert("path".to_string(), create_path_module());
+
+    // Assert module
+    stdlib.insert("assert".to_string(), create_assert_module());
+
+    // Set module
+    stdlib.insert("set".to_string(), create_set_module());
+
+    // IO module
+    stdlib.insert("io".to_string(), create_io_module());
+
+    // Log module
+    stdlib.insert("log".to_string(), create_log_module());
+
+    // URL module
+    stdlib.insert("url".to_string(), create_url_module());
 
     stdlib
 }
@@ -323,6 +353,173 @@ fn create_datetime_module() -> Value {
     Value::Module(datetime_funcs)
 }
 
+fn create_regex_module() -> Value {
+    let mut regex_funcs = HashMap::new();
+
+    regex_funcs.insert("match".to_string(), Value::NativeFunction("regex".to_string(), "match".to_string()));
+    regex_funcs.insert("find".to_string(), Value::NativeFunction("regex".to_string(), "find".to_string()));
+    regex_funcs.insert("find_all".to_string(), Value::NativeFunction("regex".to_string(), "find_all".to_string()));
+    regex_funcs.insert("replace".to_string(), Value::NativeFunction("regex".to_string(), "replace".to_string()));
+    regex_funcs.insert("replace_all".to_string(), Value::NativeFunction("regex".to_string(), "replace_all".to_string()));
+    regex_funcs.insert("split".to_string(), Value::NativeFunction("regex".to_string(), "split".to_string()));
+    regex_funcs.insert("escape".to_string(), Value::NativeFunction("regex".to_string(), "escape".to_string()));
+    regex_funcs.insert("is_valid".to_string(), Value::NativeFunction("regex".to_string(), "is_valid".to_string()));
+    regex_funcs.insert("captures".to_string(), Value::NativeFunction("regex".to_string(), "captures".to_string()));
+
+    Value::Module(regex_funcs)
+}
+
+fn create_crypto_module() -> Value {
+    let mut crypto_funcs = HashMap::new();
+
+    crypto_funcs.insert("md5".to_string(), Value::NativeFunction("crypto".to_string(), "md5".to_string()));
+    crypto_funcs.insert("sha1".to_string(), Value::NativeFunction("crypto".to_string(), "sha1".to_string()));
+    crypto_funcs.insert("sha256".to_string(), Value::NativeFunction("crypto".to_string(), "sha256".to_string()));
+    crypto_funcs.insert("sha512".to_string(), Value::NativeFunction("crypto".to_string(), "sha512".to_string()));
+    crypto_funcs.insert("hmac_sha256".to_string(), Value::NativeFunction("crypto".to_string(), "hmac_sha256".to_string()));
+    crypto_funcs.insert("uuid".to_string(), Value::NativeFunction("crypto".to_string(), "uuid".to_string()));
+    crypto_funcs.insert("uuid_v4".to_string(), Value::NativeFunction("crypto".to_string(), "uuid_v4".to_string()));
+    crypto_funcs.insert("random_bytes".to_string(), Value::NativeFunction("crypto".to_string(), "random_bytes".to_string()));
+    crypto_funcs.insert("random_hex".to_string(), Value::NativeFunction("crypto".to_string(), "random_hex".to_string()));
+    crypto_funcs.insert("hash".to_string(), Value::NativeFunction("crypto".to_string(), "hash".to_string()));
+
+    Value::Module(crypto_funcs)
+}
+
+fn create_http_module() -> Value {
+    let mut http_funcs = HashMap::new();
+
+    http_funcs.insert("get".to_string(), Value::NativeFunction("http".to_string(), "get".to_string()));
+    http_funcs.insert("post".to_string(), Value::NativeFunction("http".to_string(), "post".to_string()));
+    http_funcs.insert("put".to_string(), Value::NativeFunction("http".to_string(), "put".to_string()));
+    http_funcs.insert("delete".to_string(), Value::NativeFunction("http".to_string(), "delete".to_string()));
+    http_funcs.insert("patch".to_string(), Value::NativeFunction("http".to_string(), "patch".to_string()));
+    http_funcs.insert("head".to_string(), Value::NativeFunction("http".to_string(), "head".to_string()));
+    http_funcs.insert("request".to_string(), Value::NativeFunction("http".to_string(), "request".to_string()));
+    http_funcs.insert("download".to_string(), Value::NativeFunction("http".to_string(), "download".to_string()));
+
+    Value::Module(http_funcs)
+}
+
+fn create_csv_module() -> Value {
+    let mut csv_funcs = HashMap::new();
+
+    csv_funcs.insert("parse".to_string(), Value::NativeFunction("csv".to_string(), "parse".to_string()));
+    csv_funcs.insert("stringify".to_string(), Value::NativeFunction("csv".to_string(), "stringify".to_string()));
+    csv_funcs.insert("read".to_string(), Value::NativeFunction("csv".to_string(), "read".to_string()));
+    csv_funcs.insert("write".to_string(), Value::NativeFunction("csv".to_string(), "write".to_string()));
+    csv_funcs.insert("parse_row".to_string(), Value::NativeFunction("csv".to_string(), "parse_row".to_string()));
+    csv_funcs.insert("stringify_row".to_string(), Value::NativeFunction("csv".to_string(), "stringify_row".to_string()));
+
+    Value::Module(csv_funcs)
+}
+
+fn create_path_module() -> Value {
+    let mut path_funcs = HashMap::new();
+
+    path_funcs.insert("join".to_string(), Value::NativeFunction("path".to_string(), "join".to_string()));
+    path_funcs.insert("basename".to_string(), Value::NativeFunction("path".to_string(), "basename".to_string()));
+    path_funcs.insert("dirname".to_string(), Value::NativeFunction("path".to_string(), "dirname".to_string()));
+    path_funcs.insert("extname".to_string(), Value::NativeFunction("path".to_string(), "extname".to_string()));
+    path_funcs.insert("stem".to_string(), Value::NativeFunction("path".to_string(), "stem".to_string()));
+    path_funcs.insert("normalize".to_string(), Value::NativeFunction("path".to_string(), "normalize".to_string()));
+    path_funcs.insert("is_absolute".to_string(), Value::NativeFunction("path".to_string(), "is_absolute".to_string()));
+    path_funcs.insert("is_relative".to_string(), Value::NativeFunction("path".to_string(), "is_relative".to_string()));
+    path_funcs.insert("resolve".to_string(), Value::NativeFunction("path".to_string(), "resolve".to_string()));
+    path_funcs.insert("relative".to_string(), Value::NativeFunction("path".to_string(), "relative".to_string()));
+    path_funcs.insert("split".to_string(), Value::NativeFunction("path".to_string(), "split".to_string()));
+    path_funcs.insert("with_extension".to_string(), Value::NativeFunction("path".to_string(), "with_extension".to_string()));
+    path_funcs.insert("separator".to_string(), Value::NativeFunction("path".to_string(), "separator".to_string()));
+
+    Value::Module(path_funcs)
+}
+
+fn create_assert_module() -> Value {
+    let mut assert_funcs = HashMap::new();
+
+    assert_funcs.insert("equal".to_string(), Value::NativeFunction("assert".to_string(), "equal".to_string()));
+    assert_funcs.insert("not_equal".to_string(), Value::NativeFunction("assert".to_string(), "not_equal".to_string()));
+    assert_funcs.insert("true".to_string(), Value::NativeFunction("assert".to_string(), "true".to_string()));
+    assert_funcs.insert("false".to_string(), Value::NativeFunction("assert".to_string(), "false".to_string()));
+    assert_funcs.insert("nil".to_string(), Value::NativeFunction("assert".to_string(), "nil".to_string()));
+    assert_funcs.insert("not_nil".to_string(), Value::NativeFunction("assert".to_string(), "not_nil".to_string()));
+    assert_funcs.insert("type".to_string(), Value::NativeFunction("assert".to_string(), "type".to_string()));
+    assert_funcs.insert("fail".to_string(), Value::NativeFunction("assert".to_string(), "fail".to_string()));
+    assert_funcs.insert("greater".to_string(), Value::NativeFunction("assert".to_string(), "greater".to_string()));
+    assert_funcs.insert("less".to_string(), Value::NativeFunction("assert".to_string(), "less".to_string()));
+    assert_funcs.insert("contains".to_string(), Value::NativeFunction("assert".to_string(), "contains".to_string()));
+    assert_funcs.insert("matches".to_string(), Value::NativeFunction("assert".to_string(), "matches".to_string()));
+
+    Value::Module(assert_funcs)
+}
+
+fn create_set_module() -> Value {
+    let mut set_funcs = HashMap::new();
+
+    set_funcs.insert("new".to_string(), Value::NativeFunction("set".to_string(), "new".to_string()));
+    set_funcs.insert("from_array".to_string(), Value::NativeFunction("set".to_string(), "from_array".to_string()));
+    set_funcs.insert("add".to_string(), Value::NativeFunction("set".to_string(), "add".to_string()));
+    set_funcs.insert("remove".to_string(), Value::NativeFunction("set".to_string(), "remove".to_string()));
+    set_funcs.insert("has".to_string(), Value::NativeFunction("set".to_string(), "has".to_string()));
+    set_funcs.insert("size".to_string(), Value::NativeFunction("set".to_string(), "size".to_string()));
+    set_funcs.insert("union".to_string(), Value::NativeFunction("set".to_string(), "union".to_string()));
+    set_funcs.insert("intersection".to_string(), Value::NativeFunction("set".to_string(), "intersection".to_string()));
+    set_funcs.insert("difference".to_string(), Value::NativeFunction("set".to_string(), "difference".to_string()));
+    set_funcs.insert("symmetric_difference".to_string(), Value::NativeFunction("set".to_string(), "symmetric_difference".to_string()));
+    set_funcs.insert("is_subset".to_string(), Value::NativeFunction("set".to_string(), "is_subset".to_string()));
+    set_funcs.insert("is_superset".to_string(), Value::NativeFunction("set".to_string(), "is_superset".to_string()));
+    set_funcs.insert("to_array".to_string(), Value::NativeFunction("set".to_string(), "to_array".to_string()));
+    set_funcs.insert("clear".to_string(), Value::NativeFunction("set".to_string(), "clear".to_string()));
+
+    Value::Module(set_funcs)
+}
+
+fn create_io_module() -> Value {
+    let mut io_funcs = HashMap::new();
+
+    io_funcs.insert("read_line".to_string(), Value::NativeFunction("io".to_string(), "read_line".to_string()));
+    io_funcs.insert("read_all".to_string(), Value::NativeFunction("io".to_string(), "read_all".to_string()));
+    io_funcs.insert("print".to_string(), Value::NativeFunction("io".to_string(), "print".to_string()));
+    io_funcs.insert("println".to_string(), Value::NativeFunction("io".to_string(), "println".to_string()));
+    io_funcs.insert("eprint".to_string(), Value::NativeFunction("io".to_string(), "eprint".to_string()));
+    io_funcs.insert("eprintln".to_string(), Value::NativeFunction("io".to_string(), "eprintln".to_string()));
+    io_funcs.insert("flush".to_string(), Value::NativeFunction("io".to_string(), "flush".to_string()));
+    io_funcs.insert("input".to_string(), Value::NativeFunction("io".to_string(), "input".to_string()));
+
+    Value::Module(io_funcs)
+}
+
+fn create_log_module() -> Value {
+    let mut log_funcs = HashMap::new();
+
+    log_funcs.insert("debug".to_string(), Value::NativeFunction("log".to_string(), "debug".to_string()));
+    log_funcs.insert("info".to_string(), Value::NativeFunction("log".to_string(), "info".to_string()));
+    log_funcs.insert("warn".to_string(), Value::NativeFunction("log".to_string(), "warn".to_string()));
+    log_funcs.insert("error".to_string(), Value::NativeFunction("log".to_string(), "error".to_string()));
+    log_funcs.insert("fatal".to_string(), Value::NativeFunction("log".to_string(), "fatal".to_string()));
+    log_funcs.insert("trace".to_string(), Value::NativeFunction("log".to_string(), "trace".to_string()));
+    log_funcs.insert("level".to_string(), Value::NativeFunction("log".to_string(), "level".to_string()));
+
+    Value::Module(log_funcs)
+}
+
+fn create_url_module() -> Value {
+    let mut url_funcs = HashMap::new();
+
+    url_funcs.insert("parse".to_string(), Value::NativeFunction("url".to_string(), "parse".to_string()));
+    url_funcs.insert("format".to_string(), Value::NativeFunction("url".to_string(), "format".to_string()));
+    url_funcs.insert("encode".to_string(), Value::NativeFunction("url".to_string(), "encode".to_string()));
+    url_funcs.insert("decode".to_string(), Value::NativeFunction("url".to_string(), "decode".to_string()));
+    url_funcs.insert("encode_component".to_string(), Value::NativeFunction("url".to_string(), "encode_component".to_string()));
+    url_funcs.insert("decode_component".to_string(), Value::NativeFunction("url".to_string(), "decode_component".to_string()));
+    url_funcs.insert("query_parse".to_string(), Value::NativeFunction("url".to_string(), "query_parse".to_string()));
+    url_funcs.insert("query_stringify".to_string(), Value::NativeFunction("url".to_string(), "query_stringify".to_string()));
+    url_funcs.insert("join".to_string(), Value::NativeFunction("url".to_string(), "join".to_string()));
+    url_funcs.insert("is_valid".to_string(), Value::NativeFunction("url".to_string(), "is_valid".to_string()));
+
+    Value::Module(url_funcs)
+}
+
 /// Call a native function
 pub fn call_native(module: &str, func: &str, args: Vec<Value>, verbose: bool) -> Value {
     if verbose {
@@ -340,6 +537,16 @@ pub fn call_native(module: &str, func: &str, args: Vec<Value>, verbose: bool) ->
         "table" => call_table(func, args),
         "base64" => call_base64(func, args),
         "datetime" => call_datetime(func, args),
+        "regex" => call_regex(func, args),
+        "crypto" => call_crypto(func, args),
+        "http" => call_http(func, args),
+        "csv" => call_csv(func, args),
+        "path" => call_path(func, args),
+        "assert" => call_assert(func, args),
+        "set" => call_set(func, args),
+        "io" => call_io(func, args),
+        "log" => call_log(func, args),
+        "url" => call_url(func, args),
         _ => Value::Nil,
     }
 }
@@ -2544,6 +2751,1556 @@ fn call_datetime(func: &str, args: Vec<Value>) -> Value {
                 } else {
                     Value::Nil
                 }
+            } else {
+                Value::Nil
+            }
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_regex(func: &str, args: Vec<Value>) -> Value {
+    use regex::Regex;
+
+    match func {
+        "match" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(pattern)), Some(Value::String(text))) = (args.get(0), args.get(1)) {
+                    match Regex::new(pattern) {
+                        Ok(re) => Value::Boolean(re.is_match(text)),
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "find" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(pattern)), Some(Value::String(text))) = (args.get(0), args.get(1)) {
+                    match Regex::new(pattern) {
+                        Ok(re) => {
+                            if let Some(m) = re.find(text) {
+                                let mut dict = HashMap::new();
+                                dict.insert("text".to_string(), Value::String(m.as_str().to_string()));
+                                dict.insert("start".to_string(), Value::Number(m.start() as f64));
+                                dict.insert("end".to_string(), Value::Number(m.end() as f64));
+                                Value::Dictionary(dict)
+                            } else {
+                                Value::Nil
+                            }
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "find_all" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(pattern)), Some(Value::String(text))) = (args.get(0), args.get(1)) {
+                    match Regex::new(pattern) {
+                        Ok(re) => {
+                            let matches: Vec<Value> = re.find_iter(text)
+                                .map(|m| {
+                                    let mut dict = HashMap::new();
+                                    dict.insert("text".to_string(), Value::String(m.as_str().to_string()));
+                                    dict.insert("start".to_string(), Value::Number(m.start() as f64));
+                                    dict.insert("end".to_string(), Value::Number(m.end() as f64));
+                                    Value::Dictionary(dict)
+                                })
+                                .collect();
+                            Value::Table(matches)
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "replace" => {
+            if args.len() >= 3 {
+                if let (Some(Value::String(pattern)), Some(Value::String(text)), Some(Value::String(replacement))) =
+                    (args.get(0), args.get(1), args.get(2)) {
+                    match Regex::new(pattern) {
+                        Ok(re) => Value::String(re.replace(text, replacement.as_str()).to_string()),
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "replace_all" => {
+            if args.len() >= 3 {
+                if let (Some(Value::String(pattern)), Some(Value::String(text)), Some(Value::String(replacement))) =
+                    (args.get(0), args.get(1), args.get(2)) {
+                    match Regex::new(pattern) {
+                        Ok(re) => Value::String(re.replace_all(text, replacement.as_str()).to_string()),
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "split" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(pattern)), Some(Value::String(text))) = (args.get(0), args.get(1)) {
+                    match Regex::new(pattern) {
+                        Ok(re) => {
+                            let parts: Vec<Value> = re.split(text)
+                                .map(|s| Value::String(s.to_string()))
+                                .collect();
+                            Value::Table(parts)
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "escape" => {
+            if let Some(Value::String(s)) = args.first() {
+                Value::String(regex::escape(s))
+            } else {
+                Value::Nil
+            }
+        }
+        "is_valid" => {
+            if let Some(Value::String(pattern)) = args.first() {
+                Value::Boolean(Regex::new(pattern).is_ok())
+            } else {
+                Value::Nil
+            }
+        }
+        "captures" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(pattern)), Some(Value::String(text))) = (args.get(0), args.get(1)) {
+                    match Regex::new(pattern) {
+                        Ok(re) => {
+                            if let Some(caps) = re.captures(text) {
+                                let groups: Vec<Value> = caps.iter()
+                                    .map(|m| m.map(|m| Value::String(m.as_str().to_string())).unwrap_or(Value::Nil))
+                                    .collect();
+                                Value::Table(groups)
+                            } else {
+                                Value::Nil
+                            }
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_crypto(func: &str, args: Vec<Value>) -> Value {
+    use sha2::{Sha256, Sha512, Digest};
+    use md5::Md5;
+    use sha1::Sha1;
+    use hmac::{Hmac, Mac};
+    use rand::Rng;
+
+    match func {
+        "md5" => {
+            if let Some(Value::String(s)) = args.first() {
+                let result = Md5::digest(s.as_bytes());
+                Value::String(format!("{:x}", result))
+            } else {
+                Value::Nil
+            }
+        }
+        "sha1" => {
+            if let Some(Value::String(s)) = args.first() {
+                let result = Sha1::digest(s.as_bytes());
+                Value::String(format!("{:x}", result))
+            } else {
+                Value::Nil
+            }
+        }
+        "sha256" => {
+            if let Some(Value::String(s)) = args.first() {
+                let result = Sha256::digest(s.as_bytes());
+                Value::String(format!("{:x}", result))
+            } else {
+                Value::Nil
+            }
+        }
+        "sha512" => {
+            if let Some(Value::String(s)) = args.first() {
+                let result = Sha512::digest(s.as_bytes());
+                Value::String(format!("{:x}", result))
+            } else {
+                Value::Nil
+            }
+        }
+        "hmac_sha256" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(key)), Some(Value::String(msg))) = (args.get(0), args.get(1)) {
+                    type HmacSha256 = Hmac<Sha256>;
+                    match HmacSha256::new_from_slice(key.as_bytes()) {
+                        Ok(mut mac) => {
+                            mac.update(msg.as_bytes());
+                            let result = mac.finalize();
+                            Value::String(format!("{:x}", result.into_bytes()))
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "uuid" | "uuid_v4" => {
+            Value::String(uuid::Uuid::new_v4().to_string())
+        }
+        "random_bytes" => {
+            if let Some(Value::Number(n)) = args.first() {
+                let n = *n as usize;
+                let mut rng = rand::thread_rng();
+                let bytes: Vec<Value> = (0..n).map(|_| Value::Number(rng.gen::<u8>() as f64)).collect();
+                Value::Table(bytes)
+            } else {
+                Value::Nil
+            }
+        }
+        "random_hex" => {
+            if let Some(Value::Number(n)) = args.first() {
+                let n = *n as usize;
+                let mut rng = rand::thread_rng();
+                let bytes: Vec<u8> = (0..n).map(|_| rng.gen::<u8>()).collect();
+                let hex: String = bytes.iter().map(|b| format!("{:02x}", b)).collect();
+                Value::String(hex)
+            } else {
+                Value::Nil
+            }
+        }
+        "hash" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(algo)), Some(Value::String(data))) = (args.get(0), args.get(1)) {
+                    match algo.to_lowercase().as_str() {
+                        "md5" => {
+                            let result = Md5::digest(data.as_bytes());
+                            Value::String(format!("{:x}", result))
+                        }
+                        "sha1" => {
+                            let result = Sha1::digest(data.as_bytes());
+                            Value::String(format!("{:x}", result))
+                        }
+                        "sha256" => {
+                            let result = Sha256::digest(data.as_bytes());
+                            Value::String(format!("{:x}", result))
+                        }
+                        "sha512" => {
+                            let result = Sha512::digest(data.as_bytes());
+                            Value::String(format!("{:x}", result))
+                        }
+                        _ => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_http(func: &str, args: Vec<Value>) -> Value {
+    match func {
+        "get" => {
+            if let Some(Value::String(url)) = args.first() {
+                match ureq::get(url).call() {
+                    Ok(response) => {
+                        let status = response.status();
+                        match response.into_string() {
+                            Ok(body) => {
+                                let mut dict = HashMap::new();
+                                dict.insert("status".to_string(), Value::Number(status as f64));
+                                dict.insert("body".to_string(), Value::String(body));
+                                dict.insert("ok".to_string(), Value::Boolean(status >= 200 && status < 300));
+                                Value::Dictionary(dict)
+                            }
+                            Err(_) => Value::Nil,
+                        }
+                    }
+                    Err(ureq::Error::Status(code, response)) => {
+                        let body = response.into_string().unwrap_or_default();
+                        let mut dict = HashMap::new();
+                        dict.insert("status".to_string(), Value::Number(code as f64));
+                        dict.insert("body".to_string(), Value::String(body));
+                        dict.insert("ok".to_string(), Value::Boolean(false));
+                        Value::Dictionary(dict)
+                    }
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "post" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(url)), Some(body)) = (args.get(0), args.get(1)) {
+                    let body_str = match body {
+                        Value::String(s) => s.clone(),
+                        Value::Dictionary(_) | Value::Table(_) => {
+                            let json = value_to_json(body);
+                            json.to_string()
+                        }
+                        _ => body.to_string(),
+                    };
+
+                    let request = ureq::post(url).set("Content-Type", "application/json");
+                    match request.send_string(&body_str) {
+                        Ok(response) => {
+                            let status = response.status();
+                            match response.into_string() {
+                                Ok(resp_body) => {
+                                    let mut dict = HashMap::new();
+                                    dict.insert("status".to_string(), Value::Number(status as f64));
+                                    dict.insert("body".to_string(), Value::String(resp_body));
+                                    dict.insert("ok".to_string(), Value::Boolean(status >= 200 && status < 300));
+                                    Value::Dictionary(dict)
+                                }
+                                Err(_) => Value::Nil,
+                            }
+                        }
+                        Err(ureq::Error::Status(code, response)) => {
+                            let resp_body = response.into_string().unwrap_or_default();
+                            let mut dict = HashMap::new();
+                            dict.insert("status".to_string(), Value::Number(code as f64));
+                            dict.insert("body".to_string(), Value::String(resp_body));
+                            dict.insert("ok".to_string(), Value::Boolean(false));
+                            Value::Dictionary(dict)
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "put" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(url)), Some(body)) = (args.get(0), args.get(1)) {
+                    let body_str = match body {
+                        Value::String(s) => s.clone(),
+                        Value::Dictionary(_) | Value::Table(_) => {
+                            let json = value_to_json(body);
+                            json.to_string()
+                        }
+                        _ => body.to_string(),
+                    };
+
+                    match ureq::put(url).set("Content-Type", "application/json").send_string(&body_str) {
+                        Ok(response) => {
+                            let status = response.status();
+                            let mut dict = HashMap::new();
+                            dict.insert("status".to_string(), Value::Number(status as f64));
+                            dict.insert("body".to_string(), Value::String(response.into_string().unwrap_or_default()));
+                            dict.insert("ok".to_string(), Value::Boolean(status >= 200 && status < 300));
+                            Value::Dictionary(dict)
+                        }
+                        Err(ureq::Error::Status(code, response)) => {
+                            let mut dict = HashMap::new();
+                            dict.insert("status".to_string(), Value::Number(code as f64));
+                            dict.insert("body".to_string(), Value::String(response.into_string().unwrap_or_default()));
+                            dict.insert("ok".to_string(), Value::Boolean(false));
+                            Value::Dictionary(dict)
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "delete" => {
+            if let Some(Value::String(url)) = args.first() {
+                match ureq::delete(url).call() {
+                    Ok(response) => {
+                        let status = response.status();
+                        let mut dict = HashMap::new();
+                        dict.insert("status".to_string(), Value::Number(status as f64));
+                        dict.insert("body".to_string(), Value::String(response.into_string().unwrap_or_default()));
+                        dict.insert("ok".to_string(), Value::Boolean(status >= 200 && status < 300));
+                        Value::Dictionary(dict)
+                    }
+                    Err(ureq::Error::Status(code, response)) => {
+                        let mut dict = HashMap::new();
+                        dict.insert("status".to_string(), Value::Number(code as f64));
+                        dict.insert("body".to_string(), Value::String(response.into_string().unwrap_or_default()));
+                        dict.insert("ok".to_string(), Value::Boolean(false));
+                        Value::Dictionary(dict)
+                    }
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "patch" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(url)), Some(body)) = (args.get(0), args.get(1)) {
+                    let body_str = match body {
+                        Value::String(s) => s.clone(),
+                        Value::Dictionary(_) | Value::Table(_) => {
+                            let json = value_to_json(body);
+                            json.to_string()
+                        }
+                        _ => body.to_string(),
+                    };
+
+                    match ureq::request("PATCH", url).set("Content-Type", "application/json").send_string(&body_str) {
+                        Ok(response) => {
+                            let status = response.status();
+                            let mut dict = HashMap::new();
+                            dict.insert("status".to_string(), Value::Number(status as f64));
+                            dict.insert("body".to_string(), Value::String(response.into_string().unwrap_or_default()));
+                            dict.insert("ok".to_string(), Value::Boolean(status >= 200 && status < 300));
+                            Value::Dictionary(dict)
+                        }
+                        Err(ureq::Error::Status(code, response)) => {
+                            let mut dict = HashMap::new();
+                            dict.insert("status".to_string(), Value::Number(code as f64));
+                            dict.insert("body".to_string(), Value::String(response.into_string().unwrap_or_default()));
+                            dict.insert("ok".to_string(), Value::Boolean(false));
+                            Value::Dictionary(dict)
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "head" => {
+            if let Some(Value::String(url)) = args.first() {
+                match ureq::head(url).call() {
+                    Ok(response) => {
+                        let status = response.status();
+                        let mut dict = HashMap::new();
+                        dict.insert("status".to_string(), Value::Number(status as f64));
+                        dict.insert("ok".to_string(), Value::Boolean(status >= 200 && status < 300));
+                        Value::Dictionary(dict)
+                    }
+                    Err(ureq::Error::Status(code, _)) => {
+                        let mut dict = HashMap::new();
+                        dict.insert("status".to_string(), Value::Number(code as f64));
+                        dict.insert("ok".to_string(), Value::Boolean(false));
+                        Value::Dictionary(dict)
+                    }
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "request" => {
+            // request(method, url, options)
+            if args.len() >= 2 {
+                if let (Some(Value::String(method)), Some(Value::String(url))) = (args.get(0), args.get(1)) {
+                    let mut request = ureq::request(method.to_uppercase().as_str(), url);
+
+                    // Handle options dictionary if provided
+                    if let Some(Value::Dictionary(opts)) = args.get(2) {
+                        if let Some(Value::Dictionary(headers)) = opts.get("headers") {
+                            for (key, value) in headers {
+                                if let Value::String(v) = value {
+                                    request = request.set(key, v);
+                                }
+                            }
+                        }
+                    }
+
+                    let body = args.get(2)
+                        .and_then(|opts| {
+                            if let Value::Dictionary(d) = opts {
+                                d.get("body").cloned()
+                            } else {
+                                None
+                            }
+                        });
+
+                    let result = if let Some(b) = body {
+                        let body_str = match b {
+                            Value::String(s) => s,
+                            _ => value_to_json(&b).to_string(),
+                        };
+                        request.send_string(&body_str)
+                    } else {
+                        request.call()
+                    };
+
+                    match result {
+                        Ok(response) => {
+                            let status = response.status();
+                            let mut dict = HashMap::new();
+                            dict.insert("status".to_string(), Value::Number(status as f64));
+                            dict.insert("body".to_string(), Value::String(response.into_string().unwrap_or_default()));
+                            dict.insert("ok".to_string(), Value::Boolean(status >= 200 && status < 300));
+                            Value::Dictionary(dict)
+                        }
+                        Err(ureq::Error::Status(code, response)) => {
+                            let mut dict = HashMap::new();
+                            dict.insert("status".to_string(), Value::Number(code as f64));
+                            dict.insert("body".to_string(), Value::String(response.into_string().unwrap_or_default()));
+                            dict.insert("ok".to_string(), Value::Boolean(false));
+                            Value::Dictionary(dict)
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "download" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(url)), Some(Value::String(path))) = (args.get(0), args.get(1)) {
+                    match ureq::get(url).call() {
+                        Ok(response) => {
+                            let mut bytes = Vec::new();
+                            if response.into_reader().read_to_end(&mut bytes).is_ok() {
+                                match fs::write(path, &bytes) {
+                                    Ok(_) => Value::Boolean(true),
+                                    Err(_) => Value::Boolean(false),
+                                }
+                            } else {
+                                Value::Boolean(false)
+                            }
+                        }
+                        Err(_) => Value::Boolean(false),
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_csv(func: &str, args: Vec<Value>) -> Value {
+    match func {
+        "parse" => {
+            if let Some(Value::String(s)) = args.first() {
+                let mut reader = csv::ReaderBuilder::new()
+                    .has_headers(true)
+                    .from_reader(s.as_bytes());
+
+                let headers: Vec<String> = match reader.headers() {
+                    Ok(h) => h.iter().map(|s| s.to_string()).collect(),
+                    Err(_) => return Value::Nil,
+                };
+
+                let mut rows: Vec<Value> = Vec::new();
+                for result in reader.records() {
+                    if let Ok(record) = result {
+                        let mut row = HashMap::new();
+                        for (i, field) in record.iter().enumerate() {
+                            if let Some(header) = headers.get(i) {
+                                row.insert(header.clone(), Value::String(field.to_string()));
+                            }
+                        }
+                        rows.push(Value::Dictionary(row));
+                    }
+                }
+                Value::Table(rows)
+            } else {
+                Value::Nil
+            }
+        }
+        "stringify" => {
+            if let Some(Value::Table(rows)) = args.first() {
+                let mut wtr = csv::Writer::from_writer(vec![]);
+
+                // Collect all headers from all rows
+                let mut all_headers: Vec<String> = Vec::new();
+                for row in rows {
+                    if let Value::Dictionary(dict) = row {
+                        for key in dict.keys() {
+                            if !all_headers.contains(key) {
+                                all_headers.push(key.clone());
+                            }
+                        }
+                    }
+                }
+                all_headers.sort();
+
+                // Write headers
+                let _ = wtr.write_record(&all_headers);
+
+                // Write rows
+                for row in rows {
+                    if let Value::Dictionary(dict) = row {
+                        let record: Vec<String> = all_headers.iter()
+                            .map(|h| {
+                                dict.get(h)
+                                    .map(|v| match v {
+                                        Value::String(s) => s.clone(),
+                                        Value::Number(n) => n.to_string(),
+                                        Value::Boolean(b) => b.to_string(),
+                                        Value::Nil => String::new(),
+                                        _ => v.to_string(),
+                                    })
+                                    .unwrap_or_default()
+                            })
+                            .collect();
+                        let _ = wtr.write_record(&record);
+                    }
+                }
+
+                match wtr.into_inner() {
+                    Ok(bytes) => Value::String(String::from_utf8_lossy(&bytes).to_string()),
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "read" => {
+            if let Some(Value::String(path)) = args.first() {
+                match fs::read_to_string(path) {
+                    Ok(content) => {
+                        // Reuse parse logic
+                        call_csv("parse", vec![Value::String(content)])
+                    }
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "write" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(path)), Some(data)) = (args.get(0), args.get(1)) {
+                    let csv_str = call_csv("stringify", vec![data.clone()]);
+                    if let Value::String(content) = csv_str {
+                        match fs::write(path, content) {
+                            Ok(_) => Value::Boolean(true),
+                            Err(_) => Value::Boolean(false),
+                        }
+                    } else {
+                        Value::Boolean(false)
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "parse_row" => {
+            if let Some(Value::String(s)) = args.first() {
+                let mut reader = csv::ReaderBuilder::new()
+                    .has_headers(false)
+                    .from_reader(s.as_bytes());
+
+                if let Some(Ok(record)) = reader.records().next() {
+                    let fields: Vec<Value> = record.iter()
+                        .map(|s| Value::String(s.to_string()))
+                        .collect();
+                    Value::Table(fields)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "stringify_row" => {
+            if let Some(Value::Table(fields)) = args.first() {
+                let mut wtr = csv::Writer::from_writer(vec![]);
+                let record: Vec<String> = fields.iter()
+                    .map(|v| match v {
+                        Value::String(s) => s.clone(),
+                        Value::Number(n) => n.to_string(),
+                        Value::Boolean(b) => b.to_string(),
+                        Value::Nil => String::new(),
+                        _ => v.to_string(),
+                    })
+                    .collect();
+                let _ = wtr.write_record(&record);
+                match wtr.into_inner() {
+                    Ok(bytes) => Value::String(String::from_utf8_lossy(&bytes).trim().to_string()),
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_path(func: &str, args: Vec<Value>) -> Value {
+    use std::path::{Path, PathBuf, MAIN_SEPARATOR};
+
+    match func {
+        "join" => {
+            let mut path = PathBuf::new();
+            for arg in &args {
+                if let Value::String(part) = arg {
+                    path.push(part);
+                }
+            }
+            Value::String(path.to_string_lossy().to_string())
+        }
+        "basename" => {
+            if let Some(Value::String(p)) = args.first() {
+                let path = Path::new(p);
+                Value::String(path.file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default())
+            } else {
+                Value::Nil
+            }
+        }
+        "dirname" => {
+            if let Some(Value::String(p)) = args.first() {
+                let path = Path::new(p);
+                Value::String(path.parent()
+                    .map(|p| p.to_string_lossy().to_string())
+                    .unwrap_or_default())
+            } else {
+                Value::Nil
+            }
+        }
+        "extname" => {
+            if let Some(Value::String(p)) = args.first() {
+                let path = Path::new(p);
+                Value::String(path.extension()
+                    .map(|e| format!(".{}", e.to_string_lossy()))
+                    .unwrap_or_default())
+            } else {
+                Value::Nil
+            }
+        }
+        "stem" => {
+            if let Some(Value::String(p)) = args.first() {
+                let path = Path::new(p);
+                Value::String(path.file_stem()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_default())
+            } else {
+                Value::Nil
+            }
+        }
+        "normalize" => {
+            if let Some(Value::String(p)) = args.first() {
+                let path = PathBuf::from(p);
+                let mut normalized = PathBuf::new();
+                for component in path.components() {
+                    use std::path::Component;
+                    match component {
+                        Component::ParentDir => { normalized.pop(); }
+                        Component::CurDir => {}
+                        c => normalized.push(c),
+                    }
+                }
+                Value::String(normalized.to_string_lossy().to_string())
+            } else {
+                Value::Nil
+            }
+        }
+        "is_absolute" => {
+            if let Some(Value::String(p)) = args.first() {
+                Value::Boolean(Path::new(p).is_absolute())
+            } else {
+                Value::Nil
+            }
+        }
+        "is_relative" => {
+            if let Some(Value::String(p)) = args.first() {
+                Value::Boolean(Path::new(p).is_relative())
+            } else {
+                Value::Nil
+            }
+        }
+        "resolve" => {
+            if let Some(Value::String(p)) = args.first() {
+                match std::fs::canonicalize(p) {
+                    Ok(abs_path) => Value::String(abs_path.to_string_lossy().to_string()),
+                    Err(_) => {
+                        // If file doesn't exist, try to resolve relative to cwd
+                        if let Ok(cwd) = std::env::current_dir() {
+                            Value::String(cwd.join(p).to_string_lossy().to_string())
+                        } else {
+                            Value::Nil
+                        }
+                    }
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "relative" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(from)), Some(Value::String(to))) = (args.get(0), args.get(1)) {
+                    let from_path = PathBuf::from(from);
+                    let to_path = PathBuf::from(to);
+
+                    // Simple relative path calculation
+                    if let Ok(to_abs) = std::fs::canonicalize(&to_path) {
+                        if let Ok(from_abs) = std::fs::canonicalize(&from_path) {
+                            if let Ok(rel) = to_abs.strip_prefix(&from_abs) {
+                                return Value::String(rel.to_string_lossy().to_string());
+                            }
+                        }
+                    }
+                    Value::Nil
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "split" => {
+            if let Some(Value::String(p)) = args.first() {
+                let path = Path::new(p);
+                let components: Vec<Value> = path.components()
+                    .map(|c| Value::String(c.as_os_str().to_string_lossy().to_string()))
+                    .collect();
+                Value::Table(components)
+            } else {
+                Value::Nil
+            }
+        }
+        "with_extension" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(p)), Some(Value::String(ext))) = (args.get(0), args.get(1)) {
+                    let path = PathBuf::from(p);
+                    let new_path = path.with_extension(ext);
+                    Value::String(new_path.to_string_lossy().to_string())
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "separator" => {
+            Value::String(MAIN_SEPARATOR.to_string())
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_assert(func: &str, args: Vec<Value>) -> Value {
+    match func {
+        "equal" => {
+            if args.len() >= 2 {
+                let equal = format!("{:?}", args.get(0)) == format!("{:?}", args.get(1));
+                if equal {
+                    Value::Boolean(true)
+                } else {
+                    let msg = args.get(2).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                        .unwrap_or("Assertion failed: values are not equal");
+                    eprintln!("ASSERT FAILED: {}", msg);
+                    eprintln!("  Expected: {:?}", args.get(1));
+                    eprintln!("  Got: {:?}", args.get(0));
+                    Value::Boolean(false)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "not_equal" => {
+            if args.len() >= 2 {
+                let equal = format!("{:?}", args.get(0)) == format!("{:?}", args.get(1));
+                if !equal {
+                    Value::Boolean(true)
+                } else {
+                    let msg = args.get(2).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                        .unwrap_or("Assertion failed: values are equal");
+                    eprintln!("ASSERT FAILED: {}", msg);
+                    Value::Boolean(false)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "true" => {
+            if let Some(val) = args.first() {
+                if val.is_truthy() {
+                    Value::Boolean(true)
+                } else {
+                    let msg = args.get(1).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                        .unwrap_or("Assertion failed: expected true");
+                    eprintln!("ASSERT FAILED: {}", msg);
+                    Value::Boolean(false)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "false" => {
+            if let Some(val) = args.first() {
+                if !val.is_truthy() {
+                    Value::Boolean(true)
+                } else {
+                    let msg = args.get(1).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                        .unwrap_or("Assertion failed: expected false");
+                    eprintln!("ASSERT FAILED: {}", msg);
+                    Value::Boolean(false)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "nil" => {
+            if let Some(val) = args.first() {
+                if matches!(val, Value::Nil) {
+                    Value::Boolean(true)
+                } else {
+                    let msg = args.get(1).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                        .unwrap_or("Assertion failed: expected nil");
+                    eprintln!("ASSERT FAILED: {}", msg);
+                    Value::Boolean(false)
+                }
+            } else {
+                Value::Boolean(true)
+            }
+        }
+        "not_nil" => {
+            if let Some(val) = args.first() {
+                if !matches!(val, Value::Nil) {
+                    Value::Boolean(true)
+                } else {
+                    let msg = args.get(1).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                        .unwrap_or("Assertion failed: expected non-nil value");
+                    eprintln!("ASSERT FAILED: {}", msg);
+                    Value::Boolean(false)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "type" => {
+            if args.len() >= 2 {
+                if let Some(Value::String(expected_type)) = args.get(1) {
+                    let actual_type = match args.get(0) {
+                        Some(Value::Number(_)) => "number",
+                        Some(Value::String(_)) => "string",
+                        Some(Value::Boolean(_)) => "boolean",
+                        Some(Value::Table(_)) => "table",
+                        Some(Value::Dictionary(_)) => "dictionary",
+                        Some(Value::Function(_, _)) => "function",
+                        Some(Value::NativeFunction(_, _)) => "function",
+                        Some(Value::Module(_)) => "module",
+                        Some(Value::Nil) | None => "nil",
+                    };
+                    if actual_type == expected_type.as_str() {
+                        Value::Boolean(true)
+                    } else {
+                        let msg = args.get(2).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                            .unwrap_or("Assertion failed: type mismatch");
+                        eprintln!("ASSERT FAILED: {} (expected {}, got {})", msg, expected_type, actual_type);
+                        Value::Boolean(false)
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "fail" => {
+            let msg = args.first()
+                .and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                .unwrap_or("Assertion failed");
+            eprintln!("ASSERT FAILED: {}", msg);
+            Value::Boolean(false)
+        }
+        "greater" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Number(a)), Some(Value::Number(b))) = (args.get(0), args.get(1)) {
+                    if a > b {
+                        Value::Boolean(true)
+                    } else {
+                        let msg = args.get(2).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                            .unwrap_or("Assertion failed: first value is not greater");
+                        eprintln!("ASSERT FAILED: {} ({} is not > {})", msg, a, b);
+                        Value::Boolean(false)
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "less" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Number(a)), Some(Value::Number(b))) = (args.get(0), args.get(1)) {
+                    if a < b {
+                        Value::Boolean(true)
+                    } else {
+                        let msg = args.get(2).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                            .unwrap_or("Assertion failed: first value is not less");
+                        eprintln!("ASSERT FAILED: {} ({} is not < {})", msg, a, b);
+                        Value::Boolean(false)
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "contains" => {
+            if args.len() >= 2 {
+                let contains = match (args.get(0), args.get(1)) {
+                    (Some(Value::String(s)), Some(Value::String(sub))) => s.contains(sub.as_str()),
+                    (Some(Value::Table(arr)), Some(val)) => arr.contains(val),
+                    _ => false,
+                };
+                if contains {
+                    Value::Boolean(true)
+                } else {
+                    let msg = args.get(2).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                        .unwrap_or("Assertion failed: does not contain value");
+                    eprintln!("ASSERT FAILED: {}", msg);
+                    Value::Boolean(false)
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "matches" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(s)), Some(Value::String(pattern))) = (args.get(0), args.get(1)) {
+                    match regex::Regex::new(pattern) {
+                        Ok(re) => {
+                            if re.is_match(s) {
+                                Value::Boolean(true)
+                            } else {
+                                let msg = args.get(2).and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None })
+                                    .unwrap_or("Assertion failed: does not match pattern");
+                                eprintln!("ASSERT FAILED: {}", msg);
+                                Value::Boolean(false)
+                            }
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_set(func: &str, args: Vec<Value>) -> Value {
+    // Sets are represented as Tables with unique elements
+    fn value_key(v: &Value) -> String {
+        format!("{:?}", v)
+    }
+
+    fn to_set(arr: &[Value]) -> Vec<Value> {
+        let mut seen = std::collections::HashSet::new();
+        let mut result = Vec::new();
+        for v in arr {
+            let key = value_key(v);
+            if !seen.contains(&key) {
+                seen.insert(key);
+                result.push(v.clone());
+            }
+        }
+        result
+    }
+
+    match func {
+        "new" => {
+            Value::Table(Vec::new())
+        }
+        "from_array" => {
+            if let Some(Value::Table(arr)) = args.first() {
+                Value::Table(to_set(arr))
+            } else {
+                Value::Nil
+            }
+        }
+        "add" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr)), Some(val)) = (args.get(0), args.get(1)) {
+                    let mut new_arr = arr.clone();
+                    let key = value_key(val);
+                    if !arr.iter().any(|v| value_key(v) == key) {
+                        new_arr.push(val.clone());
+                    }
+                    Value::Table(new_arr)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "remove" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr)), Some(val)) = (args.get(0), args.get(1)) {
+                    let key = value_key(val);
+                    let new_arr: Vec<Value> = arr.iter()
+                        .filter(|v| value_key(v) != key)
+                        .cloned()
+                        .collect();
+                    Value::Table(new_arr)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "has" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr)), Some(val)) = (args.get(0), args.get(1)) {
+                    let key = value_key(val);
+                    Value::Boolean(arr.iter().any(|v| value_key(v) == key))
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "size" => {
+            if let Some(Value::Table(arr)) = args.first() {
+                Value::Number(arr.len() as f64)
+            } else {
+                Value::Nil
+            }
+        }
+        "union" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr1)), Some(Value::Table(arr2))) = (args.get(0), args.get(1)) {
+                    let mut combined = arr1.clone();
+                    combined.extend(arr2.iter().cloned());
+                    Value::Table(to_set(&combined))
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "intersection" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr1)), Some(Value::Table(arr2))) = (args.get(0), args.get(1)) {
+                    let set2: std::collections::HashSet<String> = arr2.iter().map(value_key).collect();
+                    let result: Vec<Value> = arr1.iter()
+                        .filter(|v| set2.contains(&value_key(v)))
+                        .cloned()
+                        .collect();
+                    Value::Table(result)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "difference" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr1)), Some(Value::Table(arr2))) = (args.get(0), args.get(1)) {
+                    let set2: std::collections::HashSet<String> = arr2.iter().map(value_key).collect();
+                    let result: Vec<Value> = arr1.iter()
+                        .filter(|v| !set2.contains(&value_key(v)))
+                        .cloned()
+                        .collect();
+                    Value::Table(result)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "symmetric_difference" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr1)), Some(Value::Table(arr2))) = (args.get(0), args.get(1)) {
+                    let set1: std::collections::HashSet<String> = arr1.iter().map(value_key).collect();
+                    let set2: std::collections::HashSet<String> = arr2.iter().map(value_key).collect();
+                    let mut result: Vec<Value> = arr1.iter()
+                        .filter(|v| !set2.contains(&value_key(v)))
+                        .cloned()
+                        .collect();
+                    result.extend(arr2.iter()
+                        .filter(|v| !set1.contains(&value_key(v)))
+                        .cloned());
+                    Value::Table(result)
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "is_subset" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr1)), Some(Value::Table(arr2))) = (args.get(0), args.get(1)) {
+                    let set2: std::collections::HashSet<String> = arr2.iter().map(value_key).collect();
+                    Value::Boolean(arr1.iter().all(|v| set2.contains(&value_key(v))))
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "is_superset" => {
+            if args.len() >= 2 {
+                if let (Some(Value::Table(arr1)), Some(Value::Table(arr2))) = (args.get(0), args.get(1)) {
+                    let set1: std::collections::HashSet<String> = arr1.iter().map(value_key).collect();
+                    Value::Boolean(arr2.iter().all(|v| set1.contains(&value_key(v))))
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "to_array" => {
+            if let Some(Value::Table(arr)) = args.first() {
+                Value::Table(arr.clone())
+            } else {
+                Value::Nil
+            }
+        }
+        "clear" => {
+            Value::Table(Vec::new())
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_io(func: &str, args: Vec<Value>) -> Value {
+    use std::io::{self, BufRead, Write};
+
+    match func {
+        "read_line" => {
+            let stdin = io::stdin();
+            let mut line = String::new();
+            match stdin.lock().read_line(&mut line) {
+                Ok(_) => Value::String(line.trim_end_matches('\n').trim_end_matches('\r').to_string()),
+                Err(_) => Value::Nil,
+            }
+        }
+        "read_all" => {
+            let stdin = io::stdin();
+            let mut buffer = String::new();
+            for line in stdin.lock().lines() {
+                match line {
+                    Ok(l) => {
+                        buffer.push_str(&l);
+                        buffer.push('\n');
+                    }
+                    Err(_) => break,
+                }
+            }
+            Value::String(buffer)
+        }
+        "print" => {
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    print!(" ");
+                }
+                match arg {
+                    Value::String(s) => print!("{}", s),
+                    _ => print!("{}", arg),
+                }
+            }
+            let _ = io::stdout().flush();
+            Value::Nil
+        }
+        "println" => {
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    print!(" ");
+                }
+                match arg {
+                    Value::String(s) => print!("{}", s),
+                    _ => print!("{}", arg),
+                }
+            }
+            println!();
+            Value::Nil
+        }
+        "eprint" => {
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    eprint!(" ");
+                }
+                match arg {
+                    Value::String(s) => eprint!("{}", s),
+                    _ => eprint!("{}", arg),
+                }
+            }
+            let _ = io::stderr().flush();
+            Value::Nil
+        }
+        "eprintln" => {
+            for (i, arg) in args.iter().enumerate() {
+                if i > 0 {
+                    eprint!(" ");
+                }
+                match arg {
+                    Value::String(s) => eprint!("{}", s),
+                    _ => eprint!("{}", arg),
+                }
+            }
+            eprintln!();
+            Value::Nil
+        }
+        "flush" => {
+            let _ = io::stdout().flush();
+            Value::Nil
+        }
+        "input" => {
+            // Print prompt if provided
+            if let Some(Value::String(prompt)) = args.first() {
+                print!("{}", prompt);
+                let _ = io::stdout().flush();
+            }
+            let stdin = io::stdin();
+            let mut line = String::new();
+            match stdin.lock().read_line(&mut line) {
+                Ok(_) => Value::String(line.trim_end_matches('\n').trim_end_matches('\r').to_string()),
+                Err(_) => Value::Nil,
+            }
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_log(func: &str, args: Vec<Value>) -> Value {
+    use chrono::Local;
+
+    fn format_log(level: &str, args: &[Value]) -> String {
+        let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S");
+        let message: String = args.iter()
+            .map(|v| match v {
+                Value::String(s) => s.clone(),
+                _ => v.to_string(),
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        format!("[{}] [{}] {}", timestamp, level, message)
+    }
+
+    match func {
+        "debug" => {
+            eprintln!("{}", format_log("DEBUG", &args));
+            Value::Nil
+        }
+        "info" => {
+            eprintln!("{}", format_log("INFO", &args));
+            Value::Nil
+        }
+        "warn" => {
+            eprintln!("{}", format_log("WARN", &args));
+            Value::Nil
+        }
+        "error" => {
+            eprintln!("{}", format_log("ERROR", &args));
+            Value::Nil
+        }
+        "fatal" => {
+            eprintln!("{}", format_log("FATAL", &args));
+            Value::Nil
+        }
+        "trace" => {
+            eprintln!("{}", format_log("TRACE", &args));
+            Value::Nil
+        }
+        "level" => {
+            // This would need global state to be useful, for now just return the level
+            if let Some(Value::String(level)) = args.first() {
+                Value::String(level.to_uppercase())
+            } else {
+                Value::String("INFO".to_string())
+            }
+        }
+        _ => Value::Nil,
+    }
+}
+
+fn call_url(func: &str, args: Vec<Value>) -> Value {
+    use url::Url;
+    use percent_encoding::{utf8_percent_encode, percent_decode_str, NON_ALPHANUMERIC, AsciiSet};
+
+    // URL-safe characters
+    const QUERY_ENCODE_SET: &AsciiSet = &NON_ALPHANUMERIC
+        .remove(b'-')
+        .remove(b'_')
+        .remove(b'.')
+        .remove(b'~');
+
+    match func {
+        "parse" => {
+            if let Some(Value::String(s)) = args.first() {
+                match Url::parse(s) {
+                    Ok(url) => {
+                        let mut dict = HashMap::new();
+                        dict.insert("scheme".to_string(), Value::String(url.scheme().to_string()));
+                        dict.insert("host".to_string(), url.host_str().map(|h| Value::String(h.to_string())).unwrap_or(Value::Nil));
+                        dict.insert("port".to_string(), url.port().map(|p| Value::Number(p as f64)).unwrap_or(Value::Nil));
+                        dict.insert("path".to_string(), Value::String(url.path().to_string()));
+                        dict.insert("query".to_string(), url.query().map(|q| Value::String(q.to_string())).unwrap_or(Value::Nil));
+                        dict.insert("fragment".to_string(), url.fragment().map(|f| Value::String(f.to_string())).unwrap_or(Value::Nil));
+                        dict.insert("username".to_string(), if url.username().is_empty() { Value::Nil } else { Value::String(url.username().to_string()) });
+                        dict.insert("password".to_string(), url.password().map(|p| Value::String(p.to_string())).unwrap_or(Value::Nil));
+                        dict.insert("origin".to_string(), Value::String(url.origin().unicode_serialization()));
+                        Value::Dictionary(dict)
+                    }
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "format" => {
+            if let Some(Value::Dictionary(dict)) = args.first() {
+                let scheme = dict.get("scheme").and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None }).unwrap_or("https");
+                let host = dict.get("host").and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None }).unwrap_or("");
+                let port = dict.get("port").and_then(|v| if let Value::Number(n) = v { Some(*n as u16) } else { None });
+                let path = dict.get("path").and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None }).unwrap_or("/");
+                let query = dict.get("query").and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None });
+                let fragment = dict.get("fragment").and_then(|v| if let Value::String(s) = v { Some(s.as_str()) } else { None });
+
+                let mut url = format!("{}://{}", scheme, host);
+                if let Some(p) = port {
+                    url.push_str(&format!(":{}", p));
+                }
+                url.push_str(path);
+                if let Some(q) = query {
+                    url.push_str(&format!("?{}", q));
+                }
+                if let Some(f) = fragment {
+                    url.push_str(&format!("#{}", f));
+                }
+                Value::String(url)
+            } else {
+                Value::Nil
+            }
+        }
+        "encode" | "encode_component" => {
+            if let Some(Value::String(s)) = args.first() {
+                Value::String(utf8_percent_encode(s, QUERY_ENCODE_SET).to_string())
+            } else {
+                Value::Nil
+            }
+        }
+        "decode" | "decode_component" => {
+            if let Some(Value::String(s)) = args.first() {
+                match percent_decode_str(s).decode_utf8() {
+                    Ok(decoded) => Value::String(decoded.to_string()),
+                    Err(_) => Value::Nil,
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "query_parse" => {
+            if let Some(Value::String(s)) = args.first() {
+                let pairs: HashMap<String, Value> = s.split('&')
+                    .filter_map(|pair| {
+                        let mut parts = pair.splitn(2, '=');
+                        let key = parts.next()?;
+                        let value = parts.next().unwrap_or("");
+                        let decoded_key = percent_decode_str(key).decode_utf8().ok()?.to_string();
+                        let decoded_value = percent_decode_str(value).decode_utf8().ok()?.to_string();
+                        Some((decoded_key, Value::String(decoded_value)))
+                    })
+                    .collect();
+                Value::Dictionary(pairs)
+            } else {
+                Value::Nil
+            }
+        }
+        "query_stringify" => {
+            if let Some(Value::Dictionary(dict)) = args.first() {
+                let query: String = dict.iter()
+                    .map(|(k, v)| {
+                        let value = match v {
+                            Value::String(s) => s.clone(),
+                            _ => v.to_string(),
+                        };
+                        format!("{}={}",
+                            utf8_percent_encode(k, QUERY_ENCODE_SET),
+                            utf8_percent_encode(&value, QUERY_ENCODE_SET))
+                    })
+                    .collect::<Vec<_>>()
+                    .join("&");
+                Value::String(query)
+            } else {
+                Value::Nil
+            }
+        }
+        "join" => {
+            if args.len() >= 2 {
+                if let (Some(Value::String(base)), Some(Value::String(path))) = (args.get(0), args.get(1)) {
+                    match Url::parse(base) {
+                        Ok(base_url) => {
+                            match base_url.join(path) {
+                                Ok(joined) => Value::String(joined.to_string()),
+                                Err(_) => Value::Nil,
+                            }
+                        }
+                        Err(_) => Value::Nil,
+                    }
+                } else {
+                    Value::Nil
+                }
+            } else {
+                Value::Nil
+            }
+        }
+        "is_valid" => {
+            if let Some(Value::String(s)) = args.first() {
+                Value::Boolean(Url::parse(s).is_ok())
             } else {
                 Value::Nil
             }
